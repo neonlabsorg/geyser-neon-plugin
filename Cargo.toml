@@ -1,0 +1,6 @@
+[workspace]
+
+members = [
+    "geyser-neon",
+    "neon_common"
+]

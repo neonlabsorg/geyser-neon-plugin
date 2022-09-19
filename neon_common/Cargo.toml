@@ -1,0 +1,16 @@
+[package]
+name = "neon_common"
+version = "0.1.0"
+edition = "2021"
+description = "Neon geyser plugin common structs"
+authors = ["NeonLabs Maintainers <maintainers@neonlabs.org>"]
+
+[dependencies]
+solana-geyser-plugin-interface = { version = "=1.11.10" }
+solana-sdk = { version = "=1.11.10" }
+solana-transaction-status = {version = "=1.11.10"}
+solana-program = { version = "=1.11.10" }
+solana-account-decoder= { version = "=1.11.10" }
+
+serde = "1.0.144"
+serde_derive = "1.0.144"
