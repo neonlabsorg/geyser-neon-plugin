@@ -1,4 +1,6 @@
-use flume::{Receiver, Sender};
+use std::sync::{atomic::AtomicBool, Arc};
+
+use flume::Sender;
 use neon_common::neon_structs::{
     NeonReplicaBlockInfoVersions, NeonReplicaTransactionInfoVersions, NeonSlotStatus,
     NotifyBlockMetaData, NotifyTransaction, UpdateAccount, UpdateSlotStatus,
@@ -18,17 +20,18 @@ use {
 
 use neon_common::neon_structs::NeonReplicaAccountInfoVersions;
 
+use crate::receivers::{
+    notify_block_loop, notify_transaction_loop, update_account_loop, update_slot_status_loop,
+};
+
 #[allow(dead_code)]
 pub struct GeyserPluginKafka {
     runtime: Runtime,
     account_tx: Sender<UpdateAccount>,
-    account_rx: Receiver<UpdateAccount>,
     slot_status_tx: Sender<UpdateSlotStatus>,
-    slot_status_rx: Receiver<UpdateSlotStatus>,
     transaction_tx: Sender<NotifyTransaction>,
-    transaction_rx: Receiver<NotifyTransaction>,
     block_metadata_tx: Sender<NotifyBlockMetaData>,
-    block_metadata_rx: Receiver<NotifyBlockMetaData>,
+    should_stop: Arc<AtomicBool>,
 }
 
 impl Default for GeyserPluginKafka {
@@ -44,21 +47,25 @@ impl GeyserPluginKafka {
             .build()
             .expect("Failed to initialize Tokio runtime");
 
+        let should_stop = Arc::new(AtomicBool::new(false));
+
         let (account_tx, account_rx) = flume::unbounded();
         let (slot_status_tx, slot_status_rx) = flume::unbounded();
         let (transaction_tx, transaction_rx) = flume::unbounded();
         let (block_metadata_tx, block_metadata_rx) = flume::unbounded();
 
+        tokio::spawn(update_account_loop(account_rx, should_stop.clone()));
+        tokio::spawn(update_slot_status_loop(slot_status_rx, should_stop.clone()));
+        tokio::spawn(notify_transaction_loop(transaction_rx, should_stop.clone()));
+        tokio::spawn(notify_block_loop(block_metadata_rx, should_stop.clone()));
+
         Self {
             runtime,
             account_tx,
-            account_rx,
             slot_status_tx,
-            slot_status_rx,
             transaction_tx,
-            transaction_rx,
             block_metadata_tx,
-            block_metadata_rx,
+            should_stop,
         }
     }
 }
@@ -86,6 +93,8 @@ impl GeyserPlugin for GeyserPluginKafka {
     }
 
     fn on_unload(&mut self) {
+        self.should_stop
+            .store(true, std::sync::atomic::Ordering::SeqCst);
         info!("Unloading plugin: {}", self.name());
     }
 
