@@ -1,5 +1,6 @@
 use flume::{Receiver, Sender};
 use neon_common::neon_structs::{
+    NeonReplicaBlockInfoVersions, NeonReplicaTransactionInfoVersions, NeonSlotStatus,
     NotifyBlockMetaData, NotifyTransaction, UpdateAccount, UpdateSlotStatus,
 };
 use thiserror::Error;
@@ -94,11 +95,10 @@ impl GeyserPlugin for GeyserPluginKafka {
         slot: u64,
         is_startup: bool,
     ) -> Result<()> {
+        let account: NeonReplicaAccountInfoVersions = account.into();
         let account_tx = self.account_tx.clone();
 
-        let account: NeonReplicaAccountInfoVersions = account.into();
-
-        self.runtime.block_on(async move {
+        self.runtime.spawn(async move {
             let update_account = UpdateAccount {
                 account,
                 slot,
@@ -116,10 +116,25 @@ impl GeyserPlugin for GeyserPluginKafka {
     fn update_slot_status(
         &mut self,
         slot: u64,
-        _parent: Option<u64>,
+        parent: Option<u64>,
         status: SlotStatus,
     ) -> Result<()> {
         info!("Updating slot {:?} at with status {:?}", slot, status);
+
+        let status: NeonSlotStatus = status.into();
+        let slot_status_tx = self.slot_status_tx.clone();
+
+        self.runtime.spawn(async move {
+            let update_account = UpdateSlotStatus {
+                slot,
+                parent,
+                status,
+            };
+            match slot_status_tx.send_async(update_account).await {
+                Ok(_) => todo!(),
+                Err(_) => todo!(),
+            }
+        });
 
         Ok(())
     }
@@ -132,13 +147,40 @@ impl GeyserPlugin for GeyserPluginKafka {
 
     fn notify_transaction(
         &mut self,
-        _transaction_info: ReplicaTransactionInfoVersions,
-        _slot: u64,
+        transaction_info: ReplicaTransactionInfoVersions,
+        slot: u64,
     ) -> Result<()> {
+        let transaction_info: NeonReplicaTransactionInfoVersions = transaction_info.into();
+        let transaction_tx = self.transaction_tx.clone();
+
+        self.runtime.spawn(async move {
+            let notify_transaction = NotifyTransaction {
+                transaction_info,
+                slot,
+            };
+
+            match transaction_tx.send_async(notify_transaction).await {
+                Ok(_) => todo!(),
+                Err(_) => todo!(),
+            }
+        });
+
         Ok(())
     }
 
-    fn notify_block_metadata(&mut self, _block_info: ReplicaBlockInfoVersions) -> Result<()> {
+    fn notify_block_metadata(&mut self, block_info: ReplicaBlockInfoVersions) -> Result<()> {
+        let block_info: NeonReplicaBlockInfoVersions = block_info.into();
+        let block_metadata_tx = self.block_metadata_tx.clone();
+
+        self.runtime.spawn(async move {
+            let notify_block = NotifyBlockMetaData { block_info };
+
+            match block_metadata_tx.send_async(notify_block).await {
+                Ok(_) => todo!(),
+                Err(_) => todo!(),
+            }
+        });
+
         Ok(())
     }
 

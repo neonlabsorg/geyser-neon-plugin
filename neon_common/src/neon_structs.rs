@@ -1,16 +1,19 @@
 use serde::{Deserialize, Serialize};
 use solana_account_decoder::parse_token::UiTokenAmount;
 use solana_geyser_plugin_interface::geyser_plugin_interface::{
-    ReplicaAccountInfo, ReplicaAccountInfoV2, ReplicaAccountInfoVersions,
+    ReplicaAccountInfo, ReplicaAccountInfoV2, ReplicaAccountInfoVersions, ReplicaBlockInfo,
+    ReplicaBlockInfoVersions, ReplicaTransactionInfo, ReplicaTransactionInfoV2,
+    ReplicaTransactionInfoVersions, SlotStatus,
 };
 use solana_program::hash::Hash;
 use solana_program::message::legacy::Message as LegacyMessage;
-use solana_program::message::v0::{LoadedAddresses, Message};
-use solana_sdk::transaction::Result as TransactionResult;
+use solana_program::message::v0::{LoadedAddresses, LoadedMessage, Message};
+use solana_program::message::SanitizedMessage;
+use solana_sdk::transaction::{Result as TransactionResult, SanitizedTransaction};
 use solana_sdk::transaction_context::TransactionReturnData;
 use solana_sdk::{clock::UnixTimestamp, signature::Signature};
-use solana_transaction_status::Rewards;
 use solana_transaction_status::{InnerInstructions, Reward};
+use solana_transaction_status::{Rewards, TransactionStatusMeta, TransactionTokenBalance};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 /// Information about an account being updated
@@ -106,6 +109,79 @@ impl From<&ReplicaAccountInfoV2<'_>> for NeonReplicaAccountInfoV2 {
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub enum NeonReplicaTransactionInfoVersions {
     V0_0_1(NeonReplicaTransactionInfo),
+    V0_0_2(NeonReplicaTransactionInfoV2),
+}
+
+impl From<&ReplicaTransactionInfoVersions<'_>> for NeonReplicaTransactionInfoVersions {
+    fn from(replica_account_info: &ReplicaTransactionInfoVersions<'_>) -> Self {
+        match replica_account_info {
+            ReplicaTransactionInfoVersions::V0_0_1(t) => {
+                NeonReplicaTransactionInfoVersions::V0_0_1(t.into())
+            }
+            ReplicaTransactionInfoVersions::V0_0_2(t) => {
+                NeonReplicaTransactionInfoVersions::V0_0_2(t.into())
+            }
+        }
+    }
+}
+
+impl From<ReplicaTransactionInfoVersions<'_>> for NeonReplicaTransactionInfoVersions {
+    fn from(replica_account_info: ReplicaTransactionInfoVersions<'_>) -> Self {
+        match replica_account_info {
+            ReplicaTransactionInfoVersions::V0_0_1(t) => {
+                NeonReplicaTransactionInfoVersions::V0_0_1(t.into())
+            }
+            ReplicaTransactionInfoVersions::V0_0_2(t) => {
+                NeonReplicaTransactionInfoVersions::V0_0_2(t.into())
+            }
+        }
+    }
+}
+
+impl From<&ReplicaTransactionInfo<'_>> for NeonReplicaTransactionInfo {
+    fn from(transaction_info: &ReplicaTransactionInfo<'_>) -> Self {
+        NeonReplicaTransactionInfo {
+            signature: *transaction_info.signature,
+            is_vote: transaction_info.is_vote,
+            transaction: transaction_info.transaction.into(),
+            transaction_status_meta: transaction_info.transaction_status_meta.into(),
+        }
+    }
+}
+
+impl From<&&ReplicaTransactionInfo<'_>> for NeonReplicaTransactionInfo {
+    fn from(transaction_info: &&ReplicaTransactionInfo<'_>) -> Self {
+        NeonReplicaTransactionInfo {
+            signature: *transaction_info.signature,
+            is_vote: transaction_info.is_vote,
+            transaction: transaction_info.transaction.into(),
+            transaction_status_meta: transaction_info.transaction_status_meta.into(),
+        }
+    }
+}
+
+impl From<&ReplicaTransactionInfoV2<'_>> for NeonReplicaTransactionInfoV2 {
+    fn from(transaction_info: &ReplicaTransactionInfoV2<'_>) -> Self {
+        NeonReplicaTransactionInfoV2 {
+            signature: *transaction_info.signature,
+            is_vote: transaction_info.is_vote,
+            transaction: transaction_info.transaction.into(),
+            transaction_status_meta: transaction_info.transaction_status_meta.into(),
+            index: transaction_info.index,
+        }
+    }
+}
+
+impl From<&&ReplicaTransactionInfoV2<'_>> for NeonReplicaTransactionInfoV2 {
+    fn from(transaction_info: &&ReplicaTransactionInfoV2<'_>) -> Self {
+        NeonReplicaTransactionInfoV2 {
+            signature: *transaction_info.signature,
+            is_vote: transaction_info.is_vote,
+            transaction: transaction_info.transaction.into(),
+            transaction_status_meta: transaction_info.transaction_status_meta.into(),
+            index: transaction_info.index,
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
@@ -116,20 +192,49 @@ pub struct NeonSanitizedTransaction {
     signatures: Vec<Signature>,
 }
 
+impl From<&SanitizedTransaction> for NeonSanitizedTransaction {
+    fn from(sanitized_transaction: &SanitizedTransaction) -> Self {
+        NeonSanitizedTransaction {
+            message: sanitized_transaction.message().into(),
+            message_hash: *sanitized_transaction.message_hash(),
+            is_simple_vote_tx: sanitized_transaction.is_simple_vote_transaction(),
+            signatures: sanitized_transaction.signatures().to_vec(),
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum NeonSanitizedMessage {
     /// Sanitized legacy message
     Legacy(LegacyMessage),
     /// Sanitized version #0 message with dynamically loaded addresses
-    V0(LoadedMessage),
+    V0(NeonLoadedMessage),
+}
+
+impl From<&SanitizedMessage> for NeonSanitizedMessage {
+    fn from(sanitized_message: &SanitizedMessage) -> Self {
+        match sanitized_message {
+            SanitizedMessage::Legacy(sm) => NeonSanitizedMessage::Legacy(sm.to_owned()),
+            SanitizedMessage::V0(sm) => NeonSanitizedMessage::V0(sm.into()),
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub struct LoadedMessage {
+pub struct NeonLoadedMessage {
     /// Message which loaded a collection of lookup table addresses
     pub message: Message,
     /// Addresses loaded with on-chain address lookup tables
     pub loaded_addresses: LoadedAddresses,
+}
+
+impl From<&LoadedMessage<'_>> for NeonLoadedMessage {
+    fn from(loaded_message: &LoadedMessage) -> Self {
+        NeonLoadedMessage {
+            message: loaded_message.message.clone().into_owned(),
+            loaded_addresses: loaded_message.loaded_addresses.clone().into_owned(),
+        }
+    }
 }
 
 /// Information about a transaction
@@ -148,6 +253,25 @@ pub struct NeonReplicaTransactionInfo {
     pub transaction_status_meta: NeonTransactionStatusMeta,
 }
 
+/// Information about a transaction, including index in block
+#[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
+pub struct NeonReplicaTransactionInfoV2 {
+    /// The first signature of the transaction, used for identifying the transaction.
+    pub signature: Signature,
+
+    /// Indicates if the transaction is a simple vote transaction.
+    pub is_vote: bool,
+
+    /// The sanitized transaction.
+    pub transaction: NeonSanitizedTransaction,
+
+    /// Metadata of the transaction status.
+    pub transaction_status_meta: NeonTransactionStatusMeta,
+
+    /// The transaction's index in the block
+    pub index: usize,
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct NeonTransactionTokenBalance {
     pub account_index: u8,
@@ -155,6 +279,30 @@ pub struct NeonTransactionTokenBalance {
     pub ui_token_amount: UiTokenAmount,
     pub owner: String,
     pub program_id: String,
+}
+
+impl From<TransactionTokenBalance> for NeonTransactionTokenBalance {
+    fn from(transaction_token_balance: TransactionTokenBalance) -> Self {
+        NeonTransactionTokenBalance {
+            account_index: transaction_token_balance.account_index,
+            mint: transaction_token_balance.mint,
+            ui_token_amount: transaction_token_balance.ui_token_amount,
+            owner: transaction_token_balance.owner,
+            program_id: transaction_token_balance.program_id,
+        }
+    }
+}
+
+impl From<&TransactionTokenBalance> for NeonTransactionTokenBalance {
+    fn from(transaction_token_balance: &TransactionTokenBalance) -> Self {
+        NeonTransactionTokenBalance {
+            account_index: transaction_token_balance.account_index,
+            mint: transaction_token_balance.mint.clone(),
+            ui_token_amount: transaction_token_balance.ui_token_amount.clone(),
+            owner: transaction_token_balance.owner.clone(),
+            program_id: transaction_token_balance.program_id.clone(),
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -170,6 +318,46 @@ pub struct NeonTransactionStatusMeta {
     pub rewards: Option<Rewards>,
     pub loaded_addresses: LoadedAddresses,
     pub return_data: Option<TransactionReturnData>,
+}
+
+impl From<&TransactionStatusMeta> for NeonTransactionStatusMeta {
+    fn from(transaction_status_meta: &TransactionStatusMeta) -> Self {
+        let pre_token_balances: Option<Vec<NeonTransactionTokenBalance>> = transaction_status_meta
+            .pre_token_balances
+            .as_ref()
+            .map(|v| {
+                let mut result: Vec<NeonTransactionTokenBalance> = Vec::new();
+                for i in v {
+                    result.push(i.into())
+                }
+                result
+            });
+
+        let post_token_balances: Option<Vec<NeonTransactionTokenBalance>> = transaction_status_meta
+            .post_token_balances
+            .as_ref()
+            .map(|v| {
+                let mut result: Vec<NeonTransactionTokenBalance> = Vec::new();
+                for i in v {
+                    result.push(i.into())
+                }
+                result
+            });
+
+        NeonTransactionStatusMeta {
+            status: transaction_status_meta.status.clone(),
+            fee: transaction_status_meta.fee,
+            pre_balances: transaction_status_meta.pre_balances.clone(),
+            post_balances: transaction_status_meta.post_balances.clone(),
+            inner_instructions: transaction_status_meta.inner_instructions.clone(),
+            log_messages: transaction_status_meta.log_messages.clone(),
+            pre_token_balances,
+            post_token_balances,
+            rewards: transaction_status_meta.rewards.clone(),
+            loaded_addresses: transaction_status_meta.loaded_addresses.clone(),
+            return_data: transaction_status_meta.return_data.clone(),
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -196,13 +384,33 @@ pub enum NeonReplicaBlockInfoVersions {
     V0_0_1(NeonReplicaBlockInfo),
 }
 
+impl From<ReplicaBlockInfoVersions<'_>> for NeonReplicaBlockInfoVersions {
+    fn from(replica_block_info: ReplicaBlockInfoVersions) -> Self {
+        match replica_block_info {
+            ReplicaBlockInfoVersions::V0_0_1(r) => NeonReplicaBlockInfoVersions::V0_0_1(r.into()),
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct NeonReplicaBlockInfo {
     pub slot: u64,
     pub blockhash: String,
-    pub rewards: Reward,
+    pub rewards: Vec<Reward>,
     pub block_time: Option<UnixTimestamp>,
     pub block_height: Option<u64>,
+}
+
+impl From<&ReplicaBlockInfo<'_>> for NeonReplicaBlockInfo {
+    fn from(replica_block_info: &ReplicaBlockInfo) -> Self {
+        NeonReplicaBlockInfo {
+            slot: replica_block_info.slot,
+            blockhash: replica_block_info.blockhash.to_string(),
+            rewards: replica_block_info.rewards.to_vec(),
+            block_time: replica_block_info.block_time,
+            block_height: replica_block_info.block_height,
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -232,6 +440,16 @@ pub enum NeonSlotStatus {
 
     /// The highest slot that has been voted on by supermajority of the cluster, ie. is confirmed.
     Confirmed,
+}
+
+impl From<SlotStatus> for NeonSlotStatus {
+    fn from(slot_status: SlotStatus) -> Self {
+        match slot_status {
+            SlotStatus::Processed => NeonSlotStatus::Processed,
+            SlotStatus::Rooted => NeonSlotStatus::Rooted,
+            SlotStatus::Confirmed => NeonSlotStatus::Confirmed,
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
