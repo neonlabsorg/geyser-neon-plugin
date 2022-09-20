@@ -1,9 +1,10 @@
 use std::sync::{atomic::AtomicBool, Arc};
 
 use flume::Sender;
-use neon_common::neon_structs::{
-    NeonReplicaBlockInfoVersions, NeonReplicaTransactionInfoVersions, NeonSlotStatus,
-    NotifyBlockMetaData, NotifyTransaction, UpdateAccount, UpdateSlotStatus,
+use kafka_common::kafka_structs::{
+    KafkaReplicaAccountInfoVersions, KafkaReplicaBlockInfoVersions,
+    KafkaReplicaTransactionInfoVersions, KafkaSlotStatus, NotifyBlockMetaData, NotifyTransaction,
+    UpdateAccount, UpdateSlotStatus,
 };
 use thiserror::Error;
 use tokio::runtime::{self, Runtime};
@@ -17,8 +18,6 @@ use {
         ReplicaTransactionInfoVersions, Result, SlotStatus,
     },
 };
-
-use neon_common::neon_structs::NeonReplicaAccountInfoVersions;
 
 use crate::receivers::{
     notify_block_loop, notify_transaction_loop, update_account_loop, update_slot_status_loop,
@@ -104,7 +103,7 @@ impl GeyserPlugin for GeyserPluginKafka {
         slot: u64,
         is_startup: bool,
     ) -> Result<()> {
-        let account: NeonReplicaAccountInfoVersions = account.into();
+        let account: KafkaReplicaAccountInfoVersions = account.into();
         let account_tx = self.account_tx.clone();
 
         self.runtime.spawn(async move {
@@ -130,7 +129,7 @@ impl GeyserPlugin for GeyserPluginKafka {
     ) -> Result<()> {
         info!("Updating slot {:?} at with status {:?}", slot, status);
 
-        let status: NeonSlotStatus = status.into();
+        let status: KafkaSlotStatus = status.into();
         let slot_status_tx = self.slot_status_tx.clone();
 
         self.runtime.spawn(async move {
@@ -159,7 +158,7 @@ impl GeyserPlugin for GeyserPluginKafka {
         transaction_info: ReplicaTransactionInfoVersions,
         slot: u64,
     ) -> Result<()> {
-        let transaction_info: NeonReplicaTransactionInfoVersions = transaction_info.into();
+        let transaction_info: KafkaReplicaTransactionInfoVersions = transaction_info.into();
         let transaction_tx = self.transaction_tx.clone();
 
         self.runtime.spawn(async move {
@@ -178,7 +177,7 @@ impl GeyserPlugin for GeyserPluginKafka {
     }
 
     fn notify_block_metadata(&mut self, block_info: ReplicaBlockInfoVersions) -> Result<()> {
-        let block_info: NeonReplicaBlockInfoVersions = block_info.into();
+        let block_info: KafkaReplicaBlockInfoVersions = block_info.into();
         let block_metadata_tx = self.block_metadata_tx.clone();
 
         self.runtime.spawn(async move {

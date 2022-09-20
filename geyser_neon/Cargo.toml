@@ -1,5 +1,5 @@
 [package]
-name = "geyser-neon"
+name = "geyser_neon"
 version = "0.1.0"
 edition = "2021"
 description = "Neon geyser plugin"
@@ -25,5 +25,4 @@ solana-runtime = { version = "=1.11.10" }
 solana-sdk = { version = "=1.11.10" }
 thiserror = "1.0.35"
 tokio = { version = "1.21.1", features = ["full"] }
-once_cell = "1.14.0"
-neon_common = { path = "../neon_common"}
+kafka_common = { path = "../kafka_common"}

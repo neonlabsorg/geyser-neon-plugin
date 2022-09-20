@@ -1,5 +1,5 @@
 [package]
-name = "neon_common"
+name = "kafka_common"
 version = "0.1.0"
 edition = "2021"
 description = "Neon geyser plugin common structs"

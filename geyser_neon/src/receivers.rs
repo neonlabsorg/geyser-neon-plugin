@@ -1,5 +1,5 @@
 use flume::Receiver;
-use neon_common::neon_structs::{
+use kafka_common::kafka_structs::{
     NotifyBlockMetaData, NotifyTransaction, UpdateAccount, UpdateSlotStatus,
 };
 use std::sync::atomic::Ordering::Relaxed;

@@ -17,7 +17,7 @@ use solana_transaction_status::{Rewards, TransactionStatusMeta, TransactionToken
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 /// Information about an account being updated
-pub struct NeonReplicaAccountInfo {
+pub struct KafkaReplicaAccountInfo {
     /// The Pubkey for the account
     pub pubkey: Vec<u8>,
 
@@ -44,9 +44,9 @@ pub struct NeonReplicaAccountInfo {
     pub write_version: u64,
 }
 
-impl From<&ReplicaAccountInfo<'_>> for NeonReplicaAccountInfo {
+impl From<&ReplicaAccountInfo<'_>> for KafkaReplicaAccountInfo {
     fn from(account_info: &ReplicaAccountInfo<'_>) -> Self {
-        NeonReplicaAccountInfo {
+        KafkaReplicaAccountInfo {
             pubkey: account_info.pubkey.to_vec(),
             lamports: account_info.lamports,
             owner: account_info.owner.to_vec(),
@@ -61,7 +61,7 @@ impl From<&ReplicaAccountInfo<'_>> for NeonReplicaAccountInfo {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 /// Information about an account being updated
 /// (extended with transaction signature doing this update)
-pub struct NeonReplicaAccountInfoV2 {
+pub struct KafkaReplicaAccountInfoV2 {
     /// The Pubkey for the account
     pub pubkey: Vec<u8>,
 
@@ -91,9 +91,9 @@ pub struct NeonReplicaAccountInfoV2 {
     pub txn_signature: Option<Signature>,
 }
 
-impl From<&ReplicaAccountInfoV2<'_>> for NeonReplicaAccountInfoV2 {
+impl From<&ReplicaAccountInfoV2<'_>> for KafkaReplicaAccountInfoV2 {
     fn from(account_info: &ReplicaAccountInfoV2<'_>) -> Self {
-        NeonReplicaAccountInfoV2 {
+        KafkaReplicaAccountInfoV2 {
             pubkey: account_info.pubkey.to_vec(),
             lamports: account_info.lamports,
             owner: account_info.owner.to_vec(),
@@ -107,40 +107,40 @@ impl From<&ReplicaAccountInfoV2<'_>> for NeonReplicaAccountInfoV2 {
 }
 
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
-pub enum NeonReplicaTransactionInfoVersions {
-    V0_0_1(NeonReplicaTransactionInfo),
-    V0_0_2(NeonReplicaTransactionInfoV2),
+pub enum KafkaReplicaTransactionInfoVersions {
+    V0_0_1(KafkaReplicaTransactionInfo),
+    V0_0_2(KafkaReplicaTransactionInfoV2),
 }
 
-impl From<&ReplicaTransactionInfoVersions<'_>> for NeonReplicaTransactionInfoVersions {
+impl From<&ReplicaTransactionInfoVersions<'_>> for KafkaReplicaTransactionInfoVersions {
     fn from(replica_account_info: &ReplicaTransactionInfoVersions<'_>) -> Self {
         match replica_account_info {
             ReplicaTransactionInfoVersions::V0_0_1(t) => {
-                NeonReplicaTransactionInfoVersions::V0_0_1(t.into())
+                KafkaReplicaTransactionInfoVersions::V0_0_1(t.into())
             }
             ReplicaTransactionInfoVersions::V0_0_2(t) => {
-                NeonReplicaTransactionInfoVersions::V0_0_2(t.into())
+                KafkaReplicaTransactionInfoVersions::V0_0_2(t.into())
             }
         }
     }
 }
 
-impl From<ReplicaTransactionInfoVersions<'_>> for NeonReplicaTransactionInfoVersions {
+impl From<ReplicaTransactionInfoVersions<'_>> for KafkaReplicaTransactionInfoVersions {
     fn from(replica_account_info: ReplicaTransactionInfoVersions<'_>) -> Self {
         match replica_account_info {
             ReplicaTransactionInfoVersions::V0_0_1(t) => {
-                NeonReplicaTransactionInfoVersions::V0_0_1(t.into())
+                KafkaReplicaTransactionInfoVersions::V0_0_1(t.into())
             }
             ReplicaTransactionInfoVersions::V0_0_2(t) => {
-                NeonReplicaTransactionInfoVersions::V0_0_2(t.into())
+                KafkaReplicaTransactionInfoVersions::V0_0_2(t.into())
             }
         }
     }
 }
 
-impl From<&ReplicaTransactionInfo<'_>> for NeonReplicaTransactionInfo {
+impl From<&ReplicaTransactionInfo<'_>> for KafkaReplicaTransactionInfo {
     fn from(transaction_info: &ReplicaTransactionInfo<'_>) -> Self {
-        NeonReplicaTransactionInfo {
+        KafkaReplicaTransactionInfo {
             signature: *transaction_info.signature,
             is_vote: transaction_info.is_vote,
             transaction: transaction_info.transaction.into(),
@@ -149,9 +149,9 @@ impl From<&ReplicaTransactionInfo<'_>> for NeonReplicaTransactionInfo {
     }
 }
 
-impl From<&&ReplicaTransactionInfo<'_>> for NeonReplicaTransactionInfo {
+impl From<&&ReplicaTransactionInfo<'_>> for KafkaReplicaTransactionInfo {
     fn from(transaction_info: &&ReplicaTransactionInfo<'_>) -> Self {
-        NeonReplicaTransactionInfo {
+        KafkaReplicaTransactionInfo {
             signature: *transaction_info.signature,
             is_vote: transaction_info.is_vote,
             transaction: transaction_info.transaction.into(),
@@ -160,9 +160,9 @@ impl From<&&ReplicaTransactionInfo<'_>> for NeonReplicaTransactionInfo {
     }
 }
 
-impl From<&ReplicaTransactionInfoV2<'_>> for NeonReplicaTransactionInfoV2 {
+impl From<&ReplicaTransactionInfoV2<'_>> for KafkaReplicaTransactionInfoV2 {
     fn from(transaction_info: &ReplicaTransactionInfoV2<'_>) -> Self {
-        NeonReplicaTransactionInfoV2 {
+        KafkaReplicaTransactionInfoV2 {
             signature: *transaction_info.signature,
             is_vote: transaction_info.is_vote,
             transaction: transaction_info.transaction.into(),
@@ -172,9 +172,9 @@ impl From<&ReplicaTransactionInfoV2<'_>> for NeonReplicaTransactionInfoV2 {
     }
 }
 
-impl From<&&ReplicaTransactionInfoV2<'_>> for NeonReplicaTransactionInfoV2 {
+impl From<&&ReplicaTransactionInfoV2<'_>> for KafkaReplicaTransactionInfoV2 {
     fn from(transaction_info: &&ReplicaTransactionInfoV2<'_>) -> Self {
-        NeonReplicaTransactionInfoV2 {
+        KafkaReplicaTransactionInfoV2 {
             signature: *transaction_info.signature,
             is_vote: transaction_info.is_vote,
             transaction: transaction_info.transaction.into(),
@@ -185,16 +185,16 @@ impl From<&&ReplicaTransactionInfoV2<'_>> for NeonReplicaTransactionInfoV2 {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
-pub struct NeonSanitizedTransaction {
-    message: NeonSanitizedMessage,
+pub struct KafkaSanitizedTransaction {
+    message: KafkaSanitizedMessage,
     message_hash: Hash,
     is_simple_vote_tx: bool,
     signatures: Vec<Signature>,
 }
 
-impl From<&SanitizedTransaction> for NeonSanitizedTransaction {
+impl From<&SanitizedTransaction> for KafkaSanitizedTransaction {
     fn from(sanitized_transaction: &SanitizedTransaction) -> Self {
-        NeonSanitizedTransaction {
+        KafkaSanitizedTransaction {
             message: sanitized_transaction.message().into(),
             message_hash: *sanitized_transaction.message_hash(),
             is_simple_vote_tx: sanitized_transaction.is_simple_vote_transaction(),
@@ -204,33 +204,33 @@ impl From<&SanitizedTransaction> for NeonSanitizedTransaction {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub enum NeonSanitizedMessage {
+pub enum KafkaSanitizedMessage {
     /// Sanitized legacy message
     Legacy(LegacyMessage),
     /// Sanitized version #0 message with dynamically loaded addresses
-    V0(NeonLoadedMessage),
+    V0(KafkaLoadedMessage),
 }
 
-impl From<&SanitizedMessage> for NeonSanitizedMessage {
+impl From<&SanitizedMessage> for KafkaSanitizedMessage {
     fn from(sanitized_message: &SanitizedMessage) -> Self {
         match sanitized_message {
-            SanitizedMessage::Legacy(sm) => NeonSanitizedMessage::Legacy(sm.to_owned()),
-            SanitizedMessage::V0(sm) => NeonSanitizedMessage::V0(sm.into()),
+            SanitizedMessage::Legacy(sm) => KafkaSanitizedMessage::Legacy(sm.to_owned()),
+            SanitizedMessage::V0(sm) => KafkaSanitizedMessage::V0(sm.into()),
         }
     }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub struct NeonLoadedMessage {
+pub struct KafkaLoadedMessage {
     /// Message which loaded a collection of lookup table addresses
     pub message: Message,
     /// Addresses loaded with on-chain address lookup tables
     pub loaded_addresses: LoadedAddresses,
 }
 
-impl From<&LoadedMessage<'_>> for NeonLoadedMessage {
+impl From<&LoadedMessage<'_>> for KafkaLoadedMessage {
     fn from(loaded_message: &LoadedMessage) -> Self {
-        NeonLoadedMessage {
+        KafkaLoadedMessage {
             message: loaded_message.message.clone().into_owned(),
             loaded_addresses: loaded_message.loaded_addresses.clone().into_owned(),
         }
@@ -239,7 +239,7 @@ impl From<&LoadedMessage<'_>> for NeonLoadedMessage {
 
 /// Information about a transaction
 #[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
-pub struct NeonReplicaTransactionInfo {
+pub struct KafkaReplicaTransactionInfo {
     /// The first signature of the transaction, used for identifying the transaction.
     pub signature: Signature,
 
@@ -247,15 +247,15 @@ pub struct NeonReplicaTransactionInfo {
     pub is_vote: bool,
 
     /// The sanitized transaction.
-    pub transaction: NeonSanitizedTransaction,
+    pub transaction: KafkaSanitizedTransaction,
 
     /// Metadata of the transaction status.
-    pub transaction_status_meta: NeonTransactionStatusMeta,
+    pub transaction_status_meta: KafkaTransactionStatusMeta,
 }
 
 /// Information about a transaction, including index in block
 #[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
-pub struct NeonReplicaTransactionInfoV2 {
+pub struct KafkaReplicaTransactionInfoV2 {
     /// The first signature of the transaction, used for identifying the transaction.
     pub signature: Signature,
 
@@ -263,17 +263,17 @@ pub struct NeonReplicaTransactionInfoV2 {
     pub is_vote: bool,
 
     /// The sanitized transaction.
-    pub transaction: NeonSanitizedTransaction,
+    pub transaction: KafkaSanitizedTransaction,
 
     /// Metadata of the transaction status.
-    pub transaction_status_meta: NeonTransactionStatusMeta,
+    pub transaction_status_meta: KafkaTransactionStatusMeta,
 
     /// The transaction's index in the block
     pub index: usize,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub struct NeonTransactionTokenBalance {
+pub struct KafkaTransactionTokenBalance {
     pub account_index: u8,
     pub mint: String,
     pub ui_token_amount: UiTokenAmount,
@@ -281,9 +281,9 @@ pub struct NeonTransactionTokenBalance {
     pub program_id: String,
 }
 
-impl From<TransactionTokenBalance> for NeonTransactionTokenBalance {
+impl From<TransactionTokenBalance> for KafkaTransactionTokenBalance {
     fn from(transaction_token_balance: TransactionTokenBalance) -> Self {
-        NeonTransactionTokenBalance {
+        KafkaTransactionTokenBalance {
             account_index: transaction_token_balance.account_index,
             mint: transaction_token_balance.mint,
             ui_token_amount: transaction_token_balance.ui_token_amount,
@@ -293,9 +293,9 @@ impl From<TransactionTokenBalance> for NeonTransactionTokenBalance {
     }
 }
 
-impl From<&TransactionTokenBalance> for NeonTransactionTokenBalance {
+impl From<&TransactionTokenBalance> for KafkaTransactionTokenBalance {
     fn from(transaction_token_balance: &TransactionTokenBalance) -> Self {
-        NeonTransactionTokenBalance {
+        KafkaTransactionTokenBalance {
             account_index: transaction_token_balance.account_index,
             mint: transaction_token_balance.mint.clone(),
             ui_token_amount: transaction_token_balance.ui_token_amount.clone(),
@@ -306,45 +306,46 @@ impl From<&TransactionTokenBalance> for NeonTransactionTokenBalance {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub struct NeonTransactionStatusMeta {
+pub struct KafkaTransactionStatusMeta {
     pub status: TransactionResult<()>,
     pub fee: u64,
     pub pre_balances: Vec<u64>,
     pub post_balances: Vec<u64>,
     pub inner_instructions: Option<Vec<InnerInstructions>>,
     pub log_messages: Option<Vec<String>>,
-    pub pre_token_balances: Option<Vec<NeonTransactionTokenBalance>>,
-    pub post_token_balances: Option<Vec<NeonTransactionTokenBalance>>,
+    pub pre_token_balances: Option<Vec<KafkaTransactionTokenBalance>>,
+    pub post_token_balances: Option<Vec<KafkaTransactionTokenBalance>>,
     pub rewards: Option<Rewards>,
     pub loaded_addresses: LoadedAddresses,
     pub return_data: Option<TransactionReturnData>,
 }
 
-impl From<&TransactionStatusMeta> for NeonTransactionStatusMeta {
+impl From<&TransactionStatusMeta> for KafkaTransactionStatusMeta {
     fn from(transaction_status_meta: &TransactionStatusMeta) -> Self {
-        let pre_token_balances: Option<Vec<NeonTransactionTokenBalance>> = transaction_status_meta
+        let pre_token_balances: Option<Vec<KafkaTransactionTokenBalance>> = transaction_status_meta
             .pre_token_balances
             .as_ref()
             .map(|v| {
-                let mut result: Vec<NeonTransactionTokenBalance> = Vec::new();
+                let mut result: Vec<KafkaTransactionTokenBalance> = Vec::new();
                 for i in v {
                     result.push(i.into())
                 }
                 result
             });
 
-        let post_token_balances: Option<Vec<NeonTransactionTokenBalance>> = transaction_status_meta
-            .post_token_balances
-            .as_ref()
-            .map(|v| {
-                let mut result: Vec<NeonTransactionTokenBalance> = Vec::new();
-                for i in v {
-                    result.push(i.into())
-                }
-                result
-            });
+        let post_token_balances: Option<Vec<KafkaTransactionTokenBalance>> =
+            transaction_status_meta
+                .post_token_balances
+                .as_ref()
+                .map(|v| {
+                    let mut result: Vec<KafkaTransactionTokenBalance> = Vec::new();
+                    for i in v {
+                        result.push(i.into())
+                    }
+                    result
+                });
 
-        NeonTransactionStatusMeta {
+        KafkaTransactionStatusMeta {
             status: transaction_status_meta.status.clone(),
             fee: transaction_status_meta.fee,
             pre_balances: transaction_status_meta.pre_balances.clone(),
@@ -361,39 +362,39 @@ impl From<&TransactionStatusMeta> for NeonTransactionStatusMeta {
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub enum NeonReplicaAccountInfoVersions {
-    V0_0_1(NeonReplicaAccountInfo),
-    V0_0_2(NeonReplicaAccountInfoV2),
+pub enum KafkaReplicaAccountInfoVersions {
+    V0_0_1(KafkaReplicaAccountInfo),
+    V0_0_2(KafkaReplicaAccountInfoV2),
 }
 
-impl From<ReplicaAccountInfoVersions<'_>> for NeonReplicaAccountInfoVersions {
+impl From<ReplicaAccountInfoVersions<'_>> for KafkaReplicaAccountInfoVersions {
     fn from(account_info: ReplicaAccountInfoVersions) -> Self {
         match account_info {
             ReplicaAccountInfoVersions::V0_0_1(a) => {
-                NeonReplicaAccountInfoVersions::V0_0_1(a.into())
+                KafkaReplicaAccountInfoVersions::V0_0_1(a.into())
             }
             ReplicaAccountInfoVersions::V0_0_2(a) => {
-                NeonReplicaAccountInfoVersions::V0_0_2(a.into())
+                KafkaReplicaAccountInfoVersions::V0_0_2(a.into())
             }
         }
     }
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub enum NeonReplicaBlockInfoVersions {
-    V0_0_1(NeonReplicaBlockInfo),
+pub enum KafkaReplicaBlockInfoVersions {
+    V0_0_1(KafkaReplicaBlockInfo),
 }
 
-impl From<ReplicaBlockInfoVersions<'_>> for NeonReplicaBlockInfoVersions {
+impl From<ReplicaBlockInfoVersions<'_>> for KafkaReplicaBlockInfoVersions {
     fn from(replica_block_info: ReplicaBlockInfoVersions) -> Self {
         match replica_block_info {
-            ReplicaBlockInfoVersions::V0_0_1(r) => NeonReplicaBlockInfoVersions::V0_0_1(r.into()),
+            ReplicaBlockInfoVersions::V0_0_1(r) => KafkaReplicaBlockInfoVersions::V0_0_1(r.into()),
         }
     }
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub struct NeonReplicaBlockInfo {
+pub struct KafkaReplicaBlockInfo {
     pub slot: u64,
     pub blockhash: String,
     pub rewards: Vec<Reward>,
@@ -401,9 +402,9 @@ pub struct NeonReplicaBlockInfo {
     pub block_height: Option<u64>,
 }
 
-impl From<&ReplicaBlockInfo<'_>> for NeonReplicaBlockInfo {
+impl From<&ReplicaBlockInfo<'_>> for KafkaReplicaBlockInfo {
     fn from(replica_block_info: &ReplicaBlockInfo) -> Self {
-        NeonReplicaBlockInfo {
+        KafkaReplicaBlockInfo {
             slot: replica_block_info.slot,
             blockhash: replica_block_info.blockhash.to_string(),
             rewards: replica_block_info.rewards.to_vec(),
@@ -415,7 +416,7 @@ impl From<&ReplicaBlockInfo<'_>> for NeonReplicaBlockInfo {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UpdateAccount {
-    pub account: NeonReplicaAccountInfoVersions,
+    pub account: KafkaReplicaAccountInfoVersions,
     pub slot: u64,
     pub is_startup: bool,
 }
@@ -424,12 +425,12 @@ pub struct UpdateAccount {
 pub struct UpdateSlotStatus {
     pub slot: u64,
     pub parent: Option<u64>,
-    pub status: NeonSlotStatus,
+    pub status: KafkaSlotStatus,
 }
 
 /// The current status of a slot
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-pub enum NeonSlotStatus {
+pub enum KafkaSlotStatus {
     /// The highest slot of the heaviest fork processed by the node. Ledger state at this slot is
     /// not derived from a confirmed or finalized block, but if multiple forks are present, is from
     /// the fork the validator believes is most likely to finalize.
@@ -442,23 +443,23 @@ pub enum NeonSlotStatus {
     Confirmed,
 }
 
-impl From<SlotStatus> for NeonSlotStatus {
+impl From<SlotStatus> for KafkaSlotStatus {
     fn from(slot_status: SlotStatus) -> Self {
         match slot_status {
-            SlotStatus::Processed => NeonSlotStatus::Processed,
-            SlotStatus::Rooted => NeonSlotStatus::Rooted,
-            SlotStatus::Confirmed => NeonSlotStatus::Confirmed,
+            SlotStatus::Processed => KafkaSlotStatus::Processed,
+            SlotStatus::Rooted => KafkaSlotStatus::Rooted,
+            SlotStatus::Confirmed => KafkaSlotStatus::Confirmed,
         }
     }
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct NotifyTransaction {
-    pub transaction_info: NeonReplicaTransactionInfoVersions,
+    pub transaction_info: KafkaReplicaTransactionInfoVersions,
     pub slot: u64,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct NotifyBlockMetaData {
-    pub block_info: NeonReplicaBlockInfoVersions,
+    pub block_info: KafkaReplicaBlockInfoVersions,
 }

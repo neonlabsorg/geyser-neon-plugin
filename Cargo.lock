@@ -865,16 +865,15 @@ dependencies = [
 ]
 
 [[package]]
-name = "geyser-neon"
+name = "geyser_neon"
 version = "0.1.0"
 dependencies = [
  "bs58",
  "bytemuck",
  "chrono",
  "flume",
+ "kafka_common",
  "log",
- "neon_common",
- "once_cell",
  "serde",
  "serde_derive",
  "serde_json",
@@ -1161,6 +1160,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "kafka_common"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_derive",
+ "solana-account-decoder",
+ "solana-geyser-plugin-interface",
+ "solana-program",
+ "solana-sdk",
+ "solana-transaction-status",
+]
+
+[[package]]
 name = "keccak"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1366,19 +1378,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6a51313c5820b0b02bd422f4b44776fbf47961755c74ce64afc73bfad10226c3"
 dependencies = [
  "getrandom 0.2.7",
-]
-
-[[package]]
-name = "neon_common"
-version = "0.1.0"
-dependencies = [
- "serde",
- "serde_derive",
- "solana-account-decoder",
- "solana-geyser-plugin-interface",
- "solana-program",
- "solana-sdk",
- "solana-transaction-status",
 ]
 
 [[package]]
