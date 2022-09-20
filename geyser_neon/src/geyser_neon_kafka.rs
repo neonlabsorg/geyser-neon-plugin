@@ -156,6 +156,8 @@ impl GeyserPlugin for GeyserPluginKafka {
                 let _ = handle.await;
             }
         });
+
+        self.logger.flush();
     }
 
     fn update_account(
@@ -174,8 +176,8 @@ impl GeyserPlugin for GeyserPluginKafka {
                 is_startup,
             };
             match account_tx.send_async(update_account).await {
-                Ok(_) => todo!(),
-                Err(_) => todo!(),
+                Ok(_) => (),
+                Err(e) => error!("Failed to send UpdateAccount, error: {e}"),
             }
         });
 
@@ -200,8 +202,8 @@ impl GeyserPlugin for GeyserPluginKafka {
                 status,
             };
             match slot_status_tx.send_async(update_account).await {
-                Ok(_) => todo!(),
-                Err(_) => todo!(),
+                Ok(_) => (),
+                Err(e) => error!("Failed to send UpdateSlotStatus, error: {e}"),
             }
         });
 
@@ -229,8 +231,8 @@ impl GeyserPlugin for GeyserPluginKafka {
             };
 
             match transaction_tx.send_async(notify_transaction).await {
-                Ok(_) => todo!(),
-                Err(_) => todo!(),
+                Ok(_) => (),
+                Err(e) => error!("Failed to send NotifyTransaction, error: {e}"),
             }
         });
 
@@ -245,8 +247,8 @@ impl GeyserPlugin for GeyserPluginKafka {
             let notify_block = NotifyBlockMetaData { block_info };
 
             match block_metadata_tx.send_async(notify_block).await {
-                Ok(_) => todo!(),
-                Err(_) => todo!(),
+                Ok(_) => (),
+                Err(e) => error!("Failed to send NotifyBlockMetaData, error: {e}"),
             }
         });
 
