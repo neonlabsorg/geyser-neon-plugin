@@ -7,7 +7,10 @@ use kafka_common::kafka_structs::{
     UpdateAccount, UpdateSlotStatus,
 };
 use thiserror::Error;
-use tokio::runtime::{self, Runtime};
+use tokio::{
+    runtime::{self, Runtime},
+    task::JoinHandle,
+};
 
 /// Main entry for the Kafka plugin
 use {
@@ -19,6 +22,12 @@ use {
     },
 };
 
+use fast_log::{
+    consts::LogSize,
+    plugin::{file_split::RollingType, packer::LogPacker},
+    Config, Logger,
+};
+
 use crate::receivers::{
     notify_block_loop, notify_transaction_loop, update_account_loop, update_slot_status_loop,
 };
@@ -26,11 +35,16 @@ use crate::receivers::{
 #[allow(dead_code)]
 pub struct GeyserPluginKafka {
     runtime: Runtime,
+    logger: &'static Logger,
     account_tx: Sender<UpdateAccount>,
     slot_status_tx: Sender<UpdateSlotStatus>,
     transaction_tx: Sender<NotifyTransaction>,
     block_metadata_tx: Sender<NotifyBlockMetaData>,
     should_stop: Arc<AtomicBool>,
+    update_account_jhandle: Option<JoinHandle<()>>,
+    update_slot_status_jhandle: Option<JoinHandle<()>>,
+    notify_transaction_jhandle: Option<JoinHandle<()>>,
+    notify_block_jhandle: Option<JoinHandle<()>>,
 }
 
 impl Default for GeyserPluginKafka {
@@ -46,6 +60,14 @@ impl GeyserPluginKafka {
             .build()
             .expect("Failed to initialize Tokio runtime");
 
+        let logger: &'static Logger = fast_log::init(Config::new().console().file_split(
+            "/var/logs/",
+            LogSize::KB(512),
+            RollingType::All,
+            LogPacker {},
+        ))
+        .expect("Failed to initialize fast_log");
+
         let should_stop = Arc::new(AtomicBool::new(false));
 
         let (account_tx, account_rx) = flume::unbounded();
@@ -53,18 +75,35 @@ impl GeyserPluginKafka {
         let (transaction_tx, transaction_rx) = flume::unbounded();
         let (block_metadata_tx, block_metadata_rx) = flume::unbounded();
 
-        tokio::spawn(update_account_loop(account_rx, should_stop.clone()));
-        tokio::spawn(update_slot_status_loop(slot_status_rx, should_stop.clone()));
-        tokio::spawn(notify_transaction_loop(transaction_rx, should_stop.clone()));
-        tokio::spawn(notify_block_loop(block_metadata_rx, should_stop.clone()));
+        let update_account_jhandle = Some(tokio::spawn(update_account_loop(
+            account_rx,
+            should_stop.clone(),
+        )));
+        let update_slot_status_jhandle = Some(tokio::spawn(update_slot_status_loop(
+            slot_status_rx,
+            should_stop.clone(),
+        )));
+        let notify_transaction_jhandle = Some(tokio::spawn(notify_transaction_loop(
+            transaction_rx,
+            should_stop.clone(),
+        )));
+        let notify_block_jhandle = Some(tokio::spawn(notify_block_loop(
+            block_metadata_rx,
+            should_stop.clone(),
+        )));
 
         Self {
             runtime,
+            logger,
             account_tx,
             slot_status_tx,
             transaction_tx,
             block_metadata_tx,
             should_stop,
+            update_account_jhandle,
+            update_slot_status_jhandle,
+            notify_transaction_jhandle,
+            notify_block_jhandle,
         }
     }
 }
@@ -95,6 +134,28 @@ impl GeyserPlugin for GeyserPluginKafka {
         self.should_stop
             .store(true, std::sync::atomic::Ordering::SeqCst);
         info!("Unloading plugin: {}", self.name());
+        let update_account_jhandle = self.update_account_jhandle.take();
+        let update_slot_status_jhandle = self.update_slot_status_jhandle.take();
+        let notify_transaction_jhandle = self.notify_transaction_jhandle.take();
+        let notify_block_jhandle = self.notify_block_jhandle.take();
+
+        self.runtime.block_on(async move {
+            if let Some(handle) = update_account_jhandle {
+                let _ = handle.await;
+            }
+
+            if let Some(handle) = update_slot_status_jhandle {
+                let _ = handle.await;
+            }
+
+            if let Some(handle) = notify_transaction_jhandle {
+                let _ = handle.await;
+            }
+
+            if let Some(handle) = notify_block_jhandle {
+                let _ = handle.await;
+            }
+        });
     }
 
     fn update_account(

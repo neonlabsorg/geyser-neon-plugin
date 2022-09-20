@@ -476,6 +476,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "crossbeam"
+version = "0.8.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2801af0d36612ae591caa9568261fddce32ce6e08a7275ea334a06a4ad021a2c"
+dependencies = [
+ "cfg-if",
+ "crossbeam-channel",
+ "crossbeam-deque",
+ "crossbeam-epoch",
+ "crossbeam-queue",
+ "crossbeam-utils",
+]
+
+[[package]]
 name = "crossbeam-channel"
 version = "0.5.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -508,6 +522,16 @@ dependencies = [
  "memoffset",
  "once_cell",
  "scopeguard",
+]
+
+[[package]]
+name = "crossbeam-queue"
+version = "0.3.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1cd42583b04998a5363558e5f9291ee5a5ff6b49944332103f251e7479a82aa7"
+dependencies = [
+ "cfg-if",
+ "crossbeam-utils",
 ]
 
 [[package]]
@@ -705,6 +729,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "fast_log"
+version = "1.5.39"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4e9a3287dde973cb206f615bca6511b633d4feac133d7dc61c1b758ac2718de6"
+dependencies = [
+ "crossbeam",
+ "crossbeam-channel",
+ "crossbeam-utils",
+ "fastdate",
+ "log",
+ "once_cell",
+]
+
+[[package]]
+name = "fastdate"
+version = "0.1.29"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3e30b3a4484809a259631820f5a0b9bc57c18514519ed55c34185788a9370f22"
+dependencies = [
+ "libc",
+ "once_cell",
+ "serde",
+ "winapi",
+]
+
+[[package]]
 name = "fastrand"
 version = "1.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -871,6 +921,7 @@ dependencies = [
  "bs58",
  "bytemuck",
  "chrono",
+ "fast_log",
  "flume",
  "kafka_common",
  "log",
