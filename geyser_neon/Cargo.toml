@@ -27,3 +27,4 @@ solana-sdk = { version = "=1.11.10" }
 thiserror = "1.0.35"
 tokio = { version = "1.21.1", features = ["full"] }
 kafka_common = { path = "../kafka_common"}
+rdkafka = { version = "0.28.0", features = ["cmake-build"] }

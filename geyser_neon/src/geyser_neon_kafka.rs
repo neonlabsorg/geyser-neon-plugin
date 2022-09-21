@@ -15,7 +15,6 @@ use tokio::{
 /// Main entry for the Kafka plugin
 use {
     log::*,
-    serde_derive::{Deserialize, Serialize},
     solana_geyser_plugin_interface::geyser_plugin_interface::{
         GeyserPlugin, ReplicaAccountInfoVersions, ReplicaBlockInfoVersions,
         ReplicaTransactionInfoVersions, Result, SlotStatus,
@@ -107,10 +106,6 @@ impl GeyserPluginKafka {
         }
     }
 }
-
-/// The Configuration for the Kafka plugin
-#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
-pub struct GeyserPluginKafkaConfig {}
 
 #[derive(Error, Debug)]
 pub enum GeyserPluginKafkaError {}
