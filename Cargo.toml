@@ -1,0 +1,6 @@
+[workspace]
+
+members = [
+    "geyser_neon",
+    "kafka_common"
+]
