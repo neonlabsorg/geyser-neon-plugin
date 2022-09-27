@@ -1,4 +1,8 @@
-use std::sync::{atomic::AtomicBool, Arc};
+use std::{
+    fs::File,
+    io::Read,
+    sync::{atomic::AtomicBool, Arc},
+};
 
 use flume::Sender;
 use kafka_common::kafka_structs::{
@@ -6,6 +10,7 @@ use kafka_common::kafka_structs::{
     KafkaReplicaTransactionInfoVersions, KafkaSlotStatus, NotifyBlockMetaData, NotifyTransaction,
     UpdateAccount, UpdateSlotStatus,
 };
+use solana_geyser_plugin_interface::geyser_plugin_interface::GeyserPluginError;
 use thiserror::Error;
 use tokio::{
     runtime::{self, Runtime},
@@ -27,18 +32,28 @@ use fast_log::{
     Config, Logger,
 };
 
-use crate::receivers::{
-    notify_block_loop, notify_transaction_loop, update_account_loop, update_slot_status_loop,
+use flume::Receiver;
+
+use crate::{
+    geyser_neon_config::GeyserPluginKafkaConfig,
+    receivers::{
+        notify_block_loop, notify_transaction_loop, update_account_loop, update_slot_status_loop,
+    },
 };
 
 #[allow(dead_code)]
 pub struct GeyserPluginKafka {
     runtime: Runtime,
+    config: Option<Arc<GeyserPluginKafkaConfig>>,
     logger: &'static Logger,
     account_tx: Sender<UpdateAccount>,
     slot_status_tx: Sender<UpdateSlotStatus>,
     transaction_tx: Sender<NotifyTransaction>,
     block_metadata_tx: Sender<NotifyBlockMetaData>,
+    account_rx: Receiver<UpdateAccount>,
+    slot_status_rx: Receiver<UpdateSlotStatus>,
+    transaction_rx: Receiver<NotifyTransaction>,
+    block_metadata_rx: Receiver<NotifyBlockMetaData>,
     should_stop: Arc<AtomicBool>,
     update_account_jhandle: Option<JoinHandle<()>>,
     update_slot_status_jhandle: Option<JoinHandle<()>>,
@@ -74,36 +89,60 @@ impl GeyserPluginKafka {
         let (transaction_tx, transaction_rx) = flume::unbounded();
         let (block_metadata_tx, block_metadata_rx) = flume::unbounded();
 
-        let update_account_jhandle = Some(tokio::spawn(update_account_loop(
-            account_rx,
-            should_stop.clone(),
-        )));
-        let update_slot_status_jhandle = Some(tokio::spawn(update_slot_status_loop(
-            slot_status_rx,
-            should_stop.clone(),
-        )));
-        let notify_transaction_jhandle = Some(tokio::spawn(notify_transaction_loop(
-            transaction_rx,
-            should_stop.clone(),
-        )));
-        let notify_block_jhandle = Some(tokio::spawn(notify_block_loop(
-            block_metadata_rx,
-            should_stop.clone(),
-        )));
-
         Self {
             runtime,
+            config: None,
             logger,
             account_tx,
             slot_status_tx,
             transaction_tx,
             block_metadata_tx,
+            account_rx,
+            slot_status_rx,
+            transaction_rx,
+            block_metadata_rx,
             should_stop,
-            update_account_jhandle,
-            update_slot_status_jhandle,
-            notify_transaction_jhandle,
-            notify_block_jhandle,
+            update_account_jhandle: None,
+            update_slot_status_jhandle: None,
+            notify_transaction_jhandle: None,
+            notify_block_jhandle: None,
         }
+    }
+
+    fn run(
+        &mut self,
+        config: Arc<GeyserPluginKafkaConfig>,
+        account_rx: Receiver<UpdateAccount>,
+        slot_status_rx: Receiver<UpdateSlotStatus>,
+        transaction_rx: Receiver<NotifyTransaction>,
+        block_metadata_rx: Receiver<NotifyBlockMetaData>,
+        should_stop: Arc<AtomicBool>,
+    ) {
+        let update_account_jhandle = Some(tokio::spawn(update_account_loop(
+            config.clone(),
+            account_rx,
+            should_stop.clone(),
+        )));
+        let update_slot_status_jhandle = Some(tokio::spawn(update_slot_status_loop(
+            config.clone(),
+            slot_status_rx,
+            should_stop.clone(),
+        )));
+        let notify_transaction_jhandle = Some(tokio::spawn(notify_transaction_loop(
+            config.clone(),
+            transaction_rx,
+            should_stop.clone(),
+        )));
+        let notify_block_jhandle = Some(tokio::spawn(notify_block_loop(
+            config,
+            block_metadata_rx,
+            should_stop,
+        )));
+
+        self.update_account_jhandle = update_account_jhandle;
+        self.update_slot_status_jhandle = update_slot_status_jhandle;
+        self.notify_transaction_jhandle = notify_transaction_jhandle;
+        self.notify_block_jhandle = notify_block_jhandle;
     }
 }
 
@@ -121,7 +160,35 @@ impl GeyserPlugin for GeyserPluginKafka {
         "GeyserPluginKafka"
     }
 
-    fn on_load(&mut self, _config_file: &str) -> Result<()> {
+    fn on_load(&mut self, config_file: &str) -> Result<()> {
+        let mut file = File::open(config_file)?;
+        let mut contents = String::new();
+        file.read_to_string(&mut contents)?;
+
+        let result: serde_json::Result<GeyserPluginKafkaConfig> = serde_json::from_str(&contents);
+        match result {
+            Err(err) => {
+                return Err(GeyserPluginError::ConfigFileReadError {
+                    msg: format!(
+                        "The config file is not in the JSON format expected: {:?}",
+                        err
+                    ),
+                })
+            }
+            Ok(config) => {
+                let config = Arc::new(config);
+                self.config = Some(config.clone());
+                self.run(
+                    config,
+                    self.account_rx.clone(),
+                    self.slot_status_rx.clone(),
+                    self.transaction_rx.clone(),
+                    self.block_metadata_rx.clone(),
+                    self.should_stop.clone(),
+                );
+            }
+        }
+
         Ok(())
     }
 
