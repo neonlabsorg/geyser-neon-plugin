@@ -24,6 +24,7 @@ impl<'a> KafkaProducer<'a> {
         let future_producer: FutureProducer = ClientConfig::new()
             .set("bootstrap.servers", brokers_list)
             .set("message.timeout.ms", message_timeout)
+            .set("message.send.max.retries", i32::MAX.to_string())
             .create()?;
 
         Ok(KafkaProducer {
@@ -36,12 +37,11 @@ impl<'a> KafkaProducer<'a> {
 
     pub async fn send(
         &mut self,
-        topic_name: &str,
         message: &str,
         key: &str,
         headers: Option<OwnedHeaders>,
     ) -> OwnedDeliveryResult {
-        let mut future_record = FutureRecord::to(topic_name).payload(message).key(key);
+        let mut future_record = FutureRecord::to(self.topic).payload(message).key(key);
 
         future_record.headers = headers;
 

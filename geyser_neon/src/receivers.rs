@@ -2,6 +2,7 @@ use flume::Receiver;
 use kafka_common::kafka_structs::{
     NotifyBlockMetaData, NotifyTransaction, UpdateAccount, UpdateSlotStatus,
 };
+use log::*;
 use std::sync::atomic::Ordering::Relaxed;
 use std::sync::{atomic::AtomicBool, Arc};
 
@@ -23,9 +24,9 @@ pub async fn update_account_loop(
             if let Ok(update_account) = rx.recv_async().await {
                 let message = serde_json::to_string(&update_account)
                     .expect("Failed to serialize UpdateAccount message");
-                let _ = producer
-                    .send(&config.update_account_topic, &message, "", None)
-                    .await;
+                if let Err(e) = producer.send(&message, "", None).await {
+                    error!("Producer cannot send UpdateAccount message, error: {:?}", e);
+                }
             }
         }
     }
@@ -46,9 +47,12 @@ pub async fn update_slot_status_loop(
             if let Ok(update_slot_status) = rx.recv_async().await {
                 let message = serde_json::to_string(&update_slot_status)
                     .expect("Failed to serialize UpdateSlotStatus message");
-                let _ = producer
-                    .send(&config.update_slot_topic, &message, "", None)
-                    .await;
+                if let Err(e) = producer.send(&message, "", None).await {
+                    error!(
+                        "Producer cannot send UpdateSlotStatus message, error: {:?}",
+                        e
+                    );
+                }
             }
         }
     }
@@ -69,9 +73,12 @@ pub async fn notify_transaction_loop(
             if let Ok(notify_transaction) = rx.recv_async().await {
                 let message = serde_json::to_string(&notify_transaction)
                     .expect("Failed to serialize NotifyTransaction message");
-                let _ = producer
-                    .send(&config.notify_transaction_topic, &message, "", None)
-                    .await;
+                if let Err(e) = producer.send(&message, "", None).await {
+                    error!(
+                        "Producer cannot send NotifyTransaction message, error: {:?}",
+                        e
+                    );
+                }
             }
         }
     }
@@ -92,9 +99,12 @@ pub async fn notify_block_loop(
             if let Ok(notify_block) = rx.recv_async().await {
                 let message = serde_json::to_string(&notify_block)
                     .expect("Failed to serialize NotifyBlockMetaData message");
-                let _ = producer
-                    .send(&config.notify_block_topic, &message, "", None)
-                    .await;
+                if let Err(e) = producer.send(&message, "", None).await {
+                    error!(
+                        "Producer cannot send NotifyBlockMetaData message, error: {:?}",
+                        e
+                    );
+                }
             }
         }
     }
