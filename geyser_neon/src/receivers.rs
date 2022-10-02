@@ -20,6 +20,7 @@ pub async fn update_account_loop(
         &config.message_timeout,
         &config.kafka_logging_format,
     ) {
+        info!("update_account_loop started!");
         while !should_stop.load(Relaxed) {
             if let Ok(update_account) = rx.recv_async().await {
                 let message = serde_json::to_string(&update_account)
@@ -43,6 +44,7 @@ pub async fn update_slot_status_loop(
         &config.message_timeout,
         &config.kafka_logging_format,
     ) {
+        info!("update_slot_status_loop started!");
         while !should_stop.load(Relaxed) {
             if let Ok(update_slot_status) = rx.recv_async().await {
                 let message = serde_json::to_string(&update_slot_status)
@@ -69,6 +71,7 @@ pub async fn notify_transaction_loop(
         &config.message_timeout,
         &config.kafka_logging_format,
     ) {
+        info!("notify_transaction_loop started!");
         while !should_stop.load(Relaxed) {
             if let Ok(notify_transaction) = rx.recv_async().await {
                 let message = serde_json::to_string(&notify_transaction)
@@ -95,6 +98,7 @@ pub async fn notify_block_loop(
         &config.message_timeout,
         &config.kafka_logging_format,
     ) {
+        info!("notify_block_loop started!");
         while !should_stop.load(Relaxed) {
             if let Ok(notify_block) = rx.recv_async().await {
                 let message = serde_json::to_string(&notify_block)
