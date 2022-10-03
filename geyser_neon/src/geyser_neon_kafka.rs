@@ -118,22 +118,22 @@ impl GeyserPluginKafka {
         block_metadata_rx: Receiver<NotifyBlockMetaData>,
         should_stop: Arc<AtomicBool>,
     ) {
-        let update_account_jhandle = Some(tokio::spawn(update_account_loop(
+        let update_account_jhandle = Some(self.runtime.spawn(update_account_loop(
             config.clone(),
             account_rx,
             should_stop.clone(),
         )));
-        let update_slot_status_jhandle = Some(tokio::spawn(update_slot_status_loop(
+        let update_slot_status_jhandle = Some(self.runtime.spawn(update_slot_status_loop(
             config.clone(),
             slot_status_rx,
             should_stop.clone(),
         )));
-        let notify_transaction_jhandle = Some(tokio::spawn(notify_transaction_loop(
+        let notify_transaction_jhandle = Some(self.runtime.spawn(notify_transaction_loop(
             config.clone(),
             transaction_rx,
             should_stop.clone(),
         )));
-        let notify_block_jhandle = Some(tokio::spawn(notify_block_loop(
+        let notify_block_jhandle = Some(self.runtime.spawn(notify_block_loop(
             config,
             block_metadata_rx,
             should_stop,
