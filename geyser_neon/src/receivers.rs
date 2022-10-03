@@ -20,13 +20,16 @@ pub async fn update_account_loop(
         &config.message_timeout,
         &config.kafka_logging_format,
     ) {
-        info!("update_account_loop started!");
+        info!("Created KafkaProducer for update_account_loop!");
         while !should_stop.load(Relaxed) {
             if let Ok(update_account) = rx.recv_async().await {
-                let message = serde_json::to_string(&update_account)
-                    .expect("Failed to serialize UpdateAccount message");
-                if let Err(e) = producer.send(&message, "", None).await {
-                    error!("Producer cannot send UpdateAccount message, error: {:?}", e);
+                match serde_json::to_string(&update_account) {
+                    Ok(message) => {
+                        if let Err(e) = producer.send(&message, "", None).await {
+                            error!("Producer cannot send UpdateAccount message, error: {:?}", e);
+                        }
+                    }
+                    Err(e) => error!("Failed to serialize UpdateAccount message, error {e}"),
                 }
             }
         }
@@ -44,16 +47,19 @@ pub async fn update_slot_status_loop(
         &config.message_timeout,
         &config.kafka_logging_format,
     ) {
-        info!("update_slot_status_loop started!");
+        info!("Created KafkaProducer for update_slot_status_loop!");
         while !should_stop.load(Relaxed) {
             if let Ok(update_slot_status) = rx.recv_async().await {
-                let message = serde_json::to_string(&update_slot_status)
-                    .expect("Failed to serialize UpdateSlotStatus message");
-                if let Err(e) = producer.send(&message, "", None).await {
-                    error!(
-                        "Producer cannot send UpdateSlotStatus message, error: {:?}",
-                        e
-                    );
+                match serde_json::to_string(&update_slot_status) {
+                    Ok(message) => {
+                        if let Err(e) = producer.send(&message, "", None).await {
+                            error!(
+                                "Producer cannot send UpdateSlotStatus message, error: {:?}",
+                                e
+                            );
+                        }
+                    }
+                    Err(e) => error!("Failed to serialize UpdateSlotStatus message, error {e}"),
                 }
             }
         }
@@ -71,16 +77,19 @@ pub async fn notify_transaction_loop(
         &config.message_timeout,
         &config.kafka_logging_format,
     ) {
-        info!("notify_transaction_loop started!");
+        info!("Created KafkaProducer for notify_transaction_loop!");
         while !should_stop.load(Relaxed) {
             if let Ok(notify_transaction) = rx.recv_async().await {
-                let message = serde_json::to_string(&notify_transaction)
-                    .expect("Failed to serialize NotifyTransaction message");
-                if let Err(e) = producer.send(&message, "", None).await {
-                    error!(
-                        "Producer cannot send NotifyTransaction message, error: {:?}",
-                        e
-                    );
+                match serde_json::to_string(&notify_transaction) {
+                    Ok(message) => {
+                        if let Err(e) = producer.send(&message, "", None).await {
+                            error!(
+                                "Producer cannot send NotifyTransaction message, error: {:?}",
+                                e
+                            );
+                        }
+                    }
+                    Err(e) => error!("Failed to serialize NotifyTransaction message, error {e}"),
                 }
             }
         }
@@ -98,16 +107,19 @@ pub async fn notify_block_loop(
         &config.message_timeout,
         &config.kafka_logging_format,
     ) {
-        info!("notify_block_loop started!");
+        info!("Created KafkaProducer for notify_block_loop!");
         while !should_stop.load(Relaxed) {
             if let Ok(notify_block) = rx.recv_async().await {
-                let message = serde_json::to_string(&notify_block)
-                    .expect("Failed to serialize NotifyBlockMetaData message");
-                if let Err(e) = producer.send(&message, "", None).await {
-                    error!(
-                        "Producer cannot send NotifyBlockMetaData message, error: {:?}",
-                        e
-                    );
+                match serde_json::to_string(&notify_block) {
+                    Ok(message) => {
+                        if let Err(e) = producer.send(&message, "", None).await {
+                            error!(
+                                "Producer cannot send NotifyBlockMetaData message, error: {:?}",
+                                e
+                            );
+                        }
+                    }
+                    Err(e) => error!("Failed to serialize NotifyBlockMetaData message, error {e}"),
                 }
             }
         }
