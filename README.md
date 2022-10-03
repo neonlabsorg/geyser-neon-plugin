@@ -2,6 +2,10 @@
 
 The geyser_neon asynchronously sends data from the [geyser plugins interface](https://docs.solana.com/developing/plugins/geyser-plugins) to Kafka using [rdkafka](https://github.com/fede1024/rust-rdkafka).
 
+### Requirements
+1. Solana Validator 1.11.10
+2. Kafka cluster
+
 ### Configuration File Format
 The plugin is configured using the input configuration file. An example
 configuration file looks like the following:
@@ -17,3 +21,5 @@ configuration file looks like the following:
     "message_timeout": "5000"
 }
 ```
+In order to load the plugin at the start of the Solana validator it is necessary to add the parameter
+**--geyser-plugin-config** with the path to the config above.
