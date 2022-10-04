@@ -1,3 +1,5 @@
+use std::fmt;
+
 use serde::{Deserialize, Serialize};
 use solana_account_decoder::parse_token::UiTokenAmount;
 use solana_geyser_plugin_interface::geyser_plugin_interface::{
@@ -441,6 +443,16 @@ pub enum KafkaSlotStatus {
 
     /// The highest slot that has been voted on by supermajority of the cluster, ie. is confirmed.
     Confirmed,
+}
+
+impl fmt::Display for KafkaSlotStatus {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            KafkaSlotStatus::Processed => write!(f, "Processed"),
+            KafkaSlotStatus::Rooted => write!(f, "Rooted"),
+            KafkaSlotStatus::Confirmed => write!(f, "Confirmed"),
+        }
+    }
 }
 
 impl From<SlotStatus> for KafkaSlotStatus {

@@ -41,7 +41,6 @@ use crate::{
     },
 };
 
-#[allow(dead_code)]
 pub struct GeyserPluginKafka {
     runtime: Runtime,
     config: Option<Arc<GeyserPluginKafkaConfig>>,
@@ -75,7 +74,7 @@ impl GeyserPluginKafka {
             .expect("Failed to initialize Tokio runtime");
 
         let logger: &'static Logger = fast_log::init(Config::new().console().file_split(
-            "/var/logs/",
+            "/var/logs/neon_kafka.log",
             LogSize::KB(512),
             RollingType::All,
             LogPacker {},
@@ -252,8 +251,6 @@ impl GeyserPlugin for GeyserPluginKafka {
         parent: Option<u64>,
         status: SlotStatus,
     ) -> Result<()> {
-        info!("Updating slot {:?} at with status {:?}", slot, status);
-
         let status: KafkaSlotStatus = status.into();
         let slot_status_tx = self.slot_status_tx.clone();
 

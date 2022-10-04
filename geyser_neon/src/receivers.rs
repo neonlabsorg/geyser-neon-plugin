@@ -21,16 +21,25 @@ pub async fn update_account_loop(
         &config.kafka_logging_format,
     ) {
         info!("Created KafkaProducer for update_account_loop!");
+        let mut hasher = blake3::Hasher::new();
         while !should_stop.load(Relaxed) {
             if let Ok(update_account) = rx.recv_async().await {
                 match serde_json::to_string(&update_account) {
                     Ok(message) => {
-                        if let Err(e) = producer.send(&message, "", None).await {
+                        if let Err(e) = producer
+                            .send(
+                                &message,
+                                &update_account.get_hash_with_hasher(&mut hasher),
+                                None,
+                            )
+                            .await
+                        {
                             error!("Producer cannot send UpdateAccount message, error: {:?}", e);
                         }
                     }
                     Err(e) => error!("Failed to serialize UpdateAccount message, error {e}"),
                 }
+                hasher.reset();
             }
         }
     }
@@ -52,7 +61,10 @@ pub async fn update_slot_status_loop(
             if let Ok(update_slot_status) = rx.recv_async().await {
                 match serde_json::to_string(&update_slot_status) {
                     Ok(message) => {
-                        if let Err(e) = producer.send(&message, "", None).await {
+                        if let Err(e) = producer
+                            .send(&message, &update_slot_status.get_hash(), None)
+                            .await
+                        {
                             error!(
                                 "Producer cannot send UpdateSlotStatus message, error: {:?}",
                                 e
@@ -78,11 +90,19 @@ pub async fn notify_transaction_loop(
         &config.kafka_logging_format,
     ) {
         info!("Created KafkaProducer for notify_transaction_loop!");
+        let mut hasher = blake3::Hasher::new();
         while !should_stop.load(Relaxed) {
             if let Ok(notify_transaction) = rx.recv_async().await {
                 match serde_json::to_string(&notify_transaction) {
                     Ok(message) => {
-                        if let Err(e) = producer.send(&message, "", None).await {
+                        if let Err(e) = producer
+                            .send(
+                                &message,
+                                &notify_transaction.get_hash_with_hasher(&mut hasher),
+                                None,
+                            )
+                            .await
+                        {
                             error!(
                                 "Producer cannot send NotifyTransaction message, error: {:?}",
                                 e
@@ -91,6 +111,7 @@ pub async fn notify_transaction_loop(
                     }
                     Err(e) => error!("Failed to serialize NotifyTransaction message, error {e}"),
                 }
+                hasher.reset();
             }
         }
     }
@@ -112,7 +133,8 @@ pub async fn notify_block_loop(
             if let Ok(notify_block) = rx.recv_async().await {
                 match serde_json::to_string(&notify_block) {
                     Ok(message) => {
-                        if let Err(e) = producer.send(&message, "", None).await {
+                        if let Err(e) = producer.send(&message, notify_block.get_hash(), None).await
+                        {
                             error!(
                                 "Producer cannot send NotifyBlockMetaData message, error: {:?}",
                                 e
