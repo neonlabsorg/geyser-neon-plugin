@@ -251,8 +251,6 @@ impl GeyserPlugin for GeyserPluginKafka {
         parent: Option<u64>,
         status: SlotStatus,
     ) -> Result<()> {
-        info!("Updating slot {:?} with status {:?}", slot, status);
-
         let status: KafkaSlotStatus = status.into();
         let slot_status_tx = self.slot_status_tx.clone();
 
