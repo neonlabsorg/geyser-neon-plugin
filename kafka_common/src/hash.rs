@@ -3,8 +3,7 @@ use crate::kafka_structs::{
 };
 
 impl UpdateAccount {
-    pub fn get_hash(&self) -> String {
-        let mut hasher = blake3::Hasher::new();
+    fn hash(&self, hasher: &mut blake3::Hasher) -> String {
         match &self.account {
             crate::kafka_structs::KafkaReplicaAccountInfoVersions::V0_0_1(account_info) => {
                 hasher.update(account_info.pubkey.as_slice());
@@ -19,6 +18,14 @@ impl UpdateAccount {
         hasher.update(&self.slot.to_le_bytes());
         hasher.finalize().to_string()
     }
+
+    pub fn get_hash(&self) -> String {
+        self.hash(&mut blake3::Hasher::new())
+    }
+
+    pub fn get_hash_with_hasher(&self, hasher: &mut blake3::Hasher) -> String {
+        self.hash(hasher)
+    }
 }
 
 impl UpdateSlotStatus {
@@ -28,9 +35,7 @@ impl UpdateSlotStatus {
 }
 
 impl NotifyTransaction {
-    pub fn get_hash(&self) -> String {
-        let mut hasher = blake3::Hasher::new();
-
+    fn hash(&self, hasher: &mut blake3::Hasher) -> String {
         match &self.transaction_info {
             crate::kafka_structs::KafkaReplicaTransactionInfoVersions::V0_0_1(transaction_info) => {
                 hasher.update(transaction_info.signature.as_ref());
@@ -43,13 +48,23 @@ impl NotifyTransaction {
         hasher.update(&self.slot.to_le_bytes());
         hasher.finalize().to_string()
     }
+
+    pub fn get_hash(&self) -> String {
+        let mut hasher = blake3::Hasher::new();
+
+        self.hash(&mut hasher)
+    }
+
+    pub fn get_hash_with_hasher(&self, hasher: &mut blake3::Hasher) -> String {
+        self.hash(hasher)
+    }
 }
 
 impl NotifyBlockMetaData {
-    pub fn get_hash(&self) -> String {
+    pub fn get_hash(&self) -> &String {
         match &self.block_info {
             crate::kafka_structs::KafkaReplicaBlockInfoVersions::V0_0_1(block_info) => {
-                block_info.blockhash.to_string()
+                &block_info.blockhash
             }
         }
     }

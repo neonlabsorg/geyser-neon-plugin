@@ -968,6 +968,7 @@ dependencies = [
 name = "geyser_neon"
 version = "0.1.0"
 dependencies = [
+ "blake3",
  "bs58",
  "bytemuck",
  "chrono",

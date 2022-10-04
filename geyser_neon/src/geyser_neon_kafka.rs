@@ -41,7 +41,6 @@ use crate::{
     },
 };
 
-#[allow(dead_code)]
 pub struct GeyserPluginKafka {
     runtime: Runtime,
     config: Option<Arc<GeyserPluginKafkaConfig>>,
