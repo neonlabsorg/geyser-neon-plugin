@@ -42,7 +42,7 @@ use crate::{
 };
 
 pub struct GeyserPluginKafka {
-    runtime: Runtime,
+    runtime: Arc<Runtime>,
     config: Option<Arc<GeyserPluginKafkaConfig>>,
     logger: &'static Logger,
     account_tx: Sender<UpdateAccount>,
@@ -68,10 +68,12 @@ impl Default for GeyserPluginKafka {
 
 impl GeyserPluginKafka {
     pub fn new() -> Self {
-        let runtime = runtime::Builder::new_multi_thread()
-            .enable_all()
-            .build()
-            .expect("Failed to initialize Tokio runtime");
+        let runtime = Arc::new(
+            runtime::Builder::new_multi_thread()
+                .enable_all()
+                .build()
+                .expect("Failed to initialize Tokio runtime"),
+        );
 
         let logger: &'static Logger = fast_log::init(Config::new().console().file_split(
             "/var/logs/neon_kafka.log",
@@ -118,21 +120,25 @@ impl GeyserPluginKafka {
         should_stop: Arc<AtomicBool>,
     ) {
         let update_account_jhandle = Some(self.runtime.spawn(update_account_loop(
+            self.runtime.clone(),
             config.clone(),
             account_rx,
             should_stop.clone(),
         )));
         let update_slot_status_jhandle = Some(self.runtime.spawn(update_slot_status_loop(
+            self.runtime.clone(),
             config.clone(),
             slot_status_rx,
             should_stop.clone(),
         )));
         let notify_transaction_jhandle = Some(self.runtime.spawn(notify_transaction_loop(
+            self.runtime.clone(),
             config.clone(),
             transaction_rx,
             should_stop.clone(),
         )));
         let notify_block_jhandle = Some(self.runtime.spawn(notify_block_loop(
+            self.runtime.clone(),
             config,
             block_metadata_rx,
             should_stop,

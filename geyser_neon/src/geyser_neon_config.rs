@@ -7,6 +7,6 @@ pub struct GeyserPluginKafkaConfig {
     pub update_slot_topic: String,
     pub notify_transaction_topic: String,
     pub notify_block_topic: String,
-    pub kafka_logging_format: String,
+    pub producer_send_max_retries: String,
     pub message_timeout: String,
 }

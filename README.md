@@ -17,9 +17,17 @@ configuration file looks like the following:
     "update_slot_topic": "update_slot",
     "notify_transaction_topic": "notify_transaction",
     "notify_block_topic": "notify_block",
-    "kafka_logging_format": "DEBUG",
+    "producer_send_retries": 100,
     "message_timeout": "5000"
 }
 ```
 In order to load the plugin at the start of the Solana validator it is necessary to add the parameter
 **--geyser-plugin-config** with the path to the config above.
+\
+\
+To configure the logging level for librdkafka you should use:
+```
+RUST_LOG="librdkafka=trace,rdkafka::client=debug"
+```
+This will configure the logging level of librdkafka to trace, and the level of the client module of the Rust client to debug.
+

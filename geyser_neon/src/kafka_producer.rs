@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{sync::Arc, time::Duration};
 
 use rdkafka::{
     error::KafkaResult,
@@ -7,41 +7,39 @@ use rdkafka::{
     ClientConfig,
 };
 
-pub struct KafkaProducer<'a> {
+use crate::geyser_neon_config::GeyserPluginKafkaConfig;
+
+#[derive(Clone)]
+pub struct KafkaProducer {
     pub future_producer: FutureProducer,
-    pub brokers_list: &'a str,
-    pub topic: &'a str,
-    pub logging_format: &'a str,
+    pub config: Arc<GeyserPluginKafkaConfig>,
 }
 
-impl<'a> KafkaProducer<'a> {
-    pub fn new(
-        brokers_list: &'a str,
-        topic_name: &'a str,
-        message_timeout: &'a str,
-        logging_format: &'a str,
-    ) -> KafkaResult<Self> {
+impl KafkaProducer {
+    pub fn new(config: Arc<GeyserPluginKafkaConfig>) -> KafkaResult<Self> {
         let future_producer: FutureProducer = ClientConfig::new()
-            .set("bootstrap.servers", brokers_list)
-            .set("message.timeout.ms", message_timeout)
-            .set("message.send.max.retries", i32::MAX.to_string())
+            .set("bootstrap.servers", config.brokers_list.to_string())
+            .set("message.timeout.ms", config.message_timeout.to_string())
+            .set(
+                "message.send.max.retries",
+                config.producer_send_max_retries.to_string(),
+            )
             .create()?;
 
         Ok(KafkaProducer {
             future_producer,
-            brokers_list,
-            topic: topic_name,
-            logging_format,
+            config,
         })
     }
 
     pub async fn send(
         &mut self,
+        topic: &str,
         message: &str,
         key: &str,
         headers: Option<OwnedHeaders>,
     ) -> OwnedDeliveryResult {
-        let mut future_record = FutureRecord::to(self.topic).payload(message).key(key);
+        let mut future_record = FutureRecord::to(topic).payload(message).key(key);
 
         future_record.headers = headers;
 
