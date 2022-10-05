@@ -4,6 +4,7 @@ use kafka_common::kafka_structs::{
 };
 use log::*;
 use serde::Serialize;
+use std::fmt;
 use std::sync::atomic::Ordering::Relaxed;
 use std::sync::{atomic::AtomicBool, Arc};
 use tokio::runtime::Runtime;
@@ -11,10 +12,29 @@ use tokio::runtime::Runtime;
 use crate::geyser_neon_config::GeyserPluginKafkaConfig;
 use crate::kafka_producer::KafkaProducer;
 
-pub async fn serialize_and_send<T: Serialize>(
+enum MessageType {
+    UpdateAccount,
+    UpdateSlot,
+    NotifyTransaction,
+    NotifyBlock,
+}
+
+impl fmt::Display for MessageType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            MessageType::UpdateAccount => write!(f, "UpdateAccount"),
+            MessageType::UpdateSlot => write!(f, "UpdateSlot"),
+            MessageType::NotifyTransaction => write!(f, "NotifyTransaction"),
+            MessageType::NotifyBlock => write!(f, "NotifyBlock"),
+        }
+    }
+}
+
+async fn serialize_and_send<T: Serialize>(
     config: Arc<GeyserPluginKafkaConfig>,
     mut producer: KafkaProducer,
     message: T,
+    message_type: MessageType,
     hash: String,
 ) {
     match serde_json::to_string(&message) {
@@ -23,10 +43,13 @@ pub async fn serialize_and_send<T: Serialize>(
                 .send(&config.update_account_topic, &message, &hash, None)
                 .await
             {
-                error!("Producer cannot send message, error: {:?}", e);
+                error!(
+                    "Producer cannot send {message_type} message, error: {}, serialized message {message}",
+                    e.0
+                );
             }
         }
-        Err(e) => error!("Failed to serialize message, error {e}"),
+        Err(e) => error!("Failed to serialize {message_type} message, error {e}"),
     }
 }
 
@@ -44,7 +67,14 @@ pub async fn update_account_loop(
                 let config = config.clone();
                 runtime.spawn(async move {
                     let hash = update_account.get_hash();
-                    serialize_and_send(config, producer, update_account, hash).await;
+                    serialize_and_send(
+                        config,
+                        producer,
+                        update_account,
+                        MessageType::UpdateAccount,
+                        hash,
+                    )
+                    .await;
                 });
             }
         }
@@ -65,7 +95,14 @@ pub async fn update_slot_status_loop(
                 let config = config.clone();
                 runtime.spawn(async move {
                     let hash = update_slot_status.get_hash();
-                    serialize_and_send(config, producer, update_slot_status, hash).await;
+                    serialize_and_send(
+                        config,
+                        producer,
+                        update_slot_status,
+                        MessageType::UpdateSlot,
+                        hash,
+                    )
+                    .await;
                 });
             }
         }
@@ -86,7 +123,14 @@ pub async fn notify_transaction_loop(
                 let config = config.clone();
                 runtime.spawn(async move {
                     let hash = notify_transaction.get_hash();
-                    serialize_and_send(config, producer, notify_transaction, hash).await;
+                    serialize_and_send(
+                        config,
+                        producer,
+                        notify_transaction,
+                        MessageType::NotifyTransaction,
+                        hash,
+                    )
+                    .await;
                 });
             }
         }
@@ -107,7 +151,14 @@ pub async fn notify_block_loop(
                 let config = config.clone();
                 runtime.spawn(async move {
                     let hash = notify_block.get_hash().to_string();
-                    serialize_and_send(config, producer, notify_block, hash).await;
+                    serialize_and_send(
+                        config,
+                        producer,
+                        notify_block,
+                        MessageType::NotifyBlock,
+                        hash,
+                    )
+                    .await;
                 });
             }
         }
