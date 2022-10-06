@@ -20,6 +20,7 @@ impl KafkaProducer {
         let future_producer: FutureProducer = ClientConfig::new()
             .set("bootstrap.servers", &config.brokers_list)
             .set("message.timeout.ms", &config.message_timeout_ms)
+            .set_log_level((&config.rdkafka_log_level).into())
             .set(
                 "message.send.max.retries",
                 &config.producer_send_max_retries,

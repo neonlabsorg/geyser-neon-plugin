@@ -18,7 +18,9 @@ configuration file looks like the following:
     "notify_transaction_topic": "notify_transaction",
     "notify_block_topic": "notify_block",
     "producer_send_max_retries": "100",
-    "message_timeout_ms": "5000"
+    "message_timeout_ms": "5000",
+    "rdkafka_log_level": "Info",
+    "global_log_level": "Info",
 }
 ```
 In order to load the plugin at the start of the Solana validator it is necessary to add the parameter

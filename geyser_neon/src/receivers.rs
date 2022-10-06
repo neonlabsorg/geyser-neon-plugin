@@ -37,12 +37,16 @@ async fn serialize_and_send<T: Serialize>(
     message_type: MessageType,
     hash: String,
 ) {
+    let topic = match message_type {
+        MessageType::UpdateAccount => &config.update_account_topic,
+        MessageType::UpdateSlot => &config.update_slot_topic,
+        MessageType::NotifyTransaction => &config.notify_transaction_topic,
+        MessageType::NotifyBlock => &config.notify_block_topic,
+    };
+
     match serde_json::to_string(&message) {
         Ok(message) => {
-            if let Err(e) = producer
-                .send(&config.update_account_topic, &message, &hash, None)
-                .await
-            {
+            if let Err(e) = producer.send(topic, &message, &hash, None).await {
                 error!(
                     "Producer cannot send {message_type} message, error: {}, serialized message {message}",
                     e.0
