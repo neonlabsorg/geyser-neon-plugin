@@ -17,8 +17,8 @@ configuration file looks like the following:
     "update_slot_topic": "update_slot",
     "notify_transaction_topic": "notify_transaction",
     "notify_block_topic": "notify_block",
-    "producer_send_retries": 100,
-    "message_timeout": "5000"
+    "producer_send_max_retries": "100",
+    "message_timeout_ms": "5000"
 }
 ```
 In order to load the plugin at the start of the Solana validator it is necessary to add the parameter

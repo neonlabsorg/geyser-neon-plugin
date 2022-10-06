@@ -18,11 +18,11 @@ pub struct KafkaProducer {
 impl KafkaProducer {
     pub fn new(config: Arc<GeyserPluginKafkaConfig>) -> KafkaResult<Self> {
         let future_producer: FutureProducer = ClientConfig::new()
-            .set("bootstrap.servers", config.brokers_list.to_string())
-            .set("message.timeout.ms", config.message_timeout.to_string())
+            .set("bootstrap.servers", &config.brokers_list)
+            .set("message.timeout.ms", &config.message_timeout_ms)
             .set(
                 "message.send.max.retries",
-                config.producer_send_max_retries.to_string(),
+                &config.producer_send_max_retries,
             )
             .create()?;
 
