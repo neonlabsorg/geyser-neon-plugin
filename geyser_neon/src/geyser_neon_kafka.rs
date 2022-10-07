@@ -10,6 +10,7 @@ use kafka_common::kafka_structs::{
     KafkaReplicaTransactionInfoVersions, KafkaSlotStatus, NotifyBlockMetaData, NotifyTransaction,
     UpdateAccount, UpdateSlotStatus,
 };
+use rdkafka::config::RDKafkaLogLevel;
 use solana_geyser_plugin_interface::geyser_plugin_interface::GeyserPluginError;
 use thiserror::Error;
 use tokio::{
@@ -42,7 +43,7 @@ use crate::{
 };
 
 pub struct GeyserPluginKafka {
-    runtime: Runtime,
+    runtime: Arc<Runtime>,
     config: Option<Arc<GeyserPluginKafkaConfig>>,
     logger: &'static Logger,
     account_tx: Sender<UpdateAccount>,
@@ -68,10 +69,12 @@ impl Default for GeyserPluginKafka {
 
 impl GeyserPluginKafka {
     pub fn new() -> Self {
-        let runtime = runtime::Builder::new_multi_thread()
-            .enable_all()
-            .build()
-            .expect("Failed to initialize Tokio runtime");
+        let runtime = Arc::new(
+            runtime::Builder::new_multi_thread()
+                .enable_all()
+                .build()
+                .expect("Failed to initialize Tokio runtime"),
+        );
 
         let logger: &'static Logger = fast_log::init(Config::new().console().file_split(
             "/var/logs/neon_kafka.log",
@@ -117,22 +120,41 @@ impl GeyserPluginKafka {
         block_metadata_rx: Receiver<NotifyBlockMetaData>,
         should_stop: Arc<AtomicBool>,
     ) {
+        info!(
+            "Rdkafka logging level will be set to {:?}",
+            Into::<RDKafkaLogLevel>::into(&config.rdkafka_log_level)
+        );
+
+        self.logger.set_level((&config.global_log_level).into());
+
+        info!(
+            "Global logging level is set to {:?}",
+            Into::<LevelFilter>::into(&config.global_log_level)
+        );
+
         let update_account_jhandle = Some(self.runtime.spawn(update_account_loop(
+            self.runtime.clone(),
             config.clone(),
             account_rx,
             should_stop.clone(),
         )));
+
         let update_slot_status_jhandle = Some(self.runtime.spawn(update_slot_status_loop(
+            self.runtime.clone(),
             config.clone(),
             slot_status_rx,
             should_stop.clone(),
         )));
+
         let notify_transaction_jhandle = Some(self.runtime.spawn(notify_transaction_loop(
+            self.runtime.clone(),
             config.clone(),
             transaction_rx,
             should_stop.clone(),
         )));
+
         let notify_block_jhandle = Some(self.runtime.spawn(notify_block_loop(
+            self.runtime.clone(),
             config,
             block_metadata_rx,
             should_stop,

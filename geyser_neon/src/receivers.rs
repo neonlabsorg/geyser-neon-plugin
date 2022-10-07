@@ -3,146 +3,167 @@ use kafka_common::kafka_structs::{
     NotifyBlockMetaData, NotifyTransaction, UpdateAccount, UpdateSlotStatus,
 };
 use log::*;
+use serde::Serialize;
+use std::fmt;
 use std::sync::atomic::Ordering::Relaxed;
 use std::sync::{atomic::AtomicBool, Arc};
+use tokio::runtime::Runtime;
 
 use crate::geyser_neon_config::GeyserPluginKafkaConfig;
 use crate::kafka_producer::KafkaProducer;
 
+enum MessageType {
+    UpdateAccount,
+    UpdateSlot,
+    NotifyTransaction,
+    NotifyBlock,
+}
+
+impl fmt::Display for MessageType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            MessageType::UpdateAccount => write!(f, "UpdateAccount"),
+            MessageType::UpdateSlot => write!(f, "UpdateSlot"),
+            MessageType::NotifyTransaction => write!(f, "NotifyTransaction"),
+            MessageType::NotifyBlock => write!(f, "NotifyBlock"),
+        }
+    }
+}
+
+async fn serialize_and_send<T: Serialize>(
+    config: Arc<GeyserPluginKafkaConfig>,
+    mut producer: KafkaProducer,
+    message: T,
+    message_type: MessageType,
+    hash: String,
+) {
+    let topic = match message_type {
+        MessageType::UpdateAccount => &config.update_account_topic,
+        MessageType::UpdateSlot => &config.update_slot_topic,
+        MessageType::NotifyTransaction => &config.notify_transaction_topic,
+        MessageType::NotifyBlock => &config.notify_block_topic,
+    };
+
+    match serde_json::to_string(&message) {
+        Ok(message) => {
+            if let Err(e) = producer.send(topic, &message, &hash, None).await {
+                error!(
+                    "Producer cannot send {message_type} message, error: {}, serialized message {message}",
+                    e.0
+                );
+            }
+        }
+        Err(e) => error!("Failed to serialize {message_type} message, error {e}"),
+    }
+}
+
 pub async fn update_account_loop(
+    runtime: Arc<Runtime>,
     config: Arc<GeyserPluginKafkaConfig>,
     rx: Receiver<UpdateAccount>,
     should_stop: Arc<AtomicBool>,
 ) {
-    if let Ok(mut producer) = KafkaProducer::new(
-        &config.brokers_list,
-        &config.update_account_topic,
-        &config.message_timeout,
-        &config.kafka_logging_format,
-    ) {
+    if let Ok(producer) = KafkaProducer::new(config.clone()) {
         info!("Created KafkaProducer for update_account_loop!");
-        let mut hasher = blake3::Hasher::new();
         while !should_stop.load(Relaxed) {
             if let Ok(update_account) = rx.recv_async().await {
-                match serde_json::to_string(&update_account) {
-                    Ok(message) => {
-                        if let Err(e) = producer
-                            .send(
-                                &message,
-                                &update_account.get_hash_with_hasher(&mut hasher),
-                                None,
-                            )
-                            .await
-                        {
-                            error!("Producer cannot send UpdateAccount message, error: {:?}", e);
-                        }
-                    }
-                    Err(e) => error!("Failed to serialize UpdateAccount message, error {e}"),
-                }
-                hasher.reset();
+                let producer = producer.clone();
+                let config = config.clone();
+                runtime.spawn(async move {
+                    let hash = update_account.get_hash();
+                    serialize_and_send(
+                        config,
+                        producer,
+                        update_account,
+                        MessageType::UpdateAccount,
+                        hash,
+                    )
+                    .await;
+                });
             }
         }
     }
 }
 
 pub async fn update_slot_status_loop(
+    runtime: Arc<Runtime>,
     config: Arc<GeyserPluginKafkaConfig>,
     rx: Receiver<UpdateSlotStatus>,
     should_stop: Arc<AtomicBool>,
 ) {
-    if let Ok(mut producer) = KafkaProducer::new(
-        &config.brokers_list,
-        &config.update_slot_topic,
-        &config.message_timeout,
-        &config.kafka_logging_format,
-    ) {
+    if let Ok(producer) = KafkaProducer::new(config.clone()) {
         info!("Created KafkaProducer for update_slot_status_loop!");
         while !should_stop.load(Relaxed) {
             if let Ok(update_slot_status) = rx.recv_async().await {
-                match serde_json::to_string(&update_slot_status) {
-                    Ok(message) => {
-                        if let Err(e) = producer
-                            .send(&message, &update_slot_status.get_hash(), None)
-                            .await
-                        {
-                            error!(
-                                "Producer cannot send UpdateSlotStatus message, error: {:?}",
-                                e
-                            );
-                        }
-                    }
-                    Err(e) => error!("Failed to serialize UpdateSlotStatus message, error {e}"),
-                }
+                let producer = producer.clone();
+                let config = config.clone();
+                runtime.spawn(async move {
+                    let hash = update_slot_status.get_hash();
+                    serialize_and_send(
+                        config,
+                        producer,
+                        update_slot_status,
+                        MessageType::UpdateSlot,
+                        hash,
+                    )
+                    .await;
+                });
             }
         }
     }
 }
 
 pub async fn notify_transaction_loop(
+    runtime: Arc<Runtime>,
     config: Arc<GeyserPluginKafkaConfig>,
     rx: Receiver<NotifyTransaction>,
     should_stop: Arc<AtomicBool>,
 ) {
-    if let Ok(mut producer) = KafkaProducer::new(
-        &config.brokers_list,
-        &config.notify_transaction_topic,
-        &config.message_timeout,
-        &config.kafka_logging_format,
-    ) {
+    if let Ok(producer) = KafkaProducer::new(config.clone()) {
         info!("Created KafkaProducer for notify_transaction_loop!");
-        let mut hasher = blake3::Hasher::new();
         while !should_stop.load(Relaxed) {
             if let Ok(notify_transaction) = rx.recv_async().await {
-                match serde_json::to_string(&notify_transaction) {
-                    Ok(message) => {
-                        if let Err(e) = producer
-                            .send(
-                                &message,
-                                &notify_transaction.get_hash_with_hasher(&mut hasher),
-                                None,
-                            )
-                            .await
-                        {
-                            error!(
-                                "Producer cannot send NotifyTransaction message, error: {:?}",
-                                e
-                            );
-                        }
-                    }
-                    Err(e) => error!("Failed to serialize NotifyTransaction message, error {e}"),
-                }
-                hasher.reset();
+                let producer = producer.clone();
+                let config = config.clone();
+                runtime.spawn(async move {
+                    let hash = notify_transaction.get_hash();
+                    serialize_and_send(
+                        config,
+                        producer,
+                        notify_transaction,
+                        MessageType::NotifyTransaction,
+                        hash,
+                    )
+                    .await;
+                });
             }
         }
     }
 }
 
 pub async fn notify_block_loop(
+    runtime: Arc<Runtime>,
     config: Arc<GeyserPluginKafkaConfig>,
     rx: Receiver<NotifyBlockMetaData>,
     should_stop: Arc<AtomicBool>,
 ) {
-    if let Ok(mut producer) = KafkaProducer::new(
-        &config.brokers_list,
-        &config.notify_block_topic,
-        &config.message_timeout,
-        &config.kafka_logging_format,
-    ) {
+    if let Ok(producer) = KafkaProducer::new(config.clone()) {
         info!("Created KafkaProducer for notify_block_loop!");
         while !should_stop.load(Relaxed) {
             if let Ok(notify_block) = rx.recv_async().await {
-                match serde_json::to_string(&notify_block) {
-                    Ok(message) => {
-                        if let Err(e) = producer.send(&message, notify_block.get_hash(), None).await
-                        {
-                            error!(
-                                "Producer cannot send NotifyBlockMetaData message, error: {:?}",
-                                e
-                            );
-                        }
-                    }
-                    Err(e) => error!("Failed to serialize NotifyBlockMetaData message, error {e}"),
-                }
+                let producer = producer.clone();
+                let config = config.clone();
+                runtime.spawn(async move {
+                    let hash = notify_block.get_hash().to_string();
+                    serialize_and_send(
+                        config,
+                        producer,
+                        notify_block,
+                        MessageType::NotifyBlock,
+                        hash,
+                    )
+                    .await;
+                });
             }
         }
     }

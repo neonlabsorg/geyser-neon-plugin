@@ -739,9 +739,9 @@ dependencies = [
 
 [[package]]
 name = "fast_log"
-version = "1.5.39"
+version = "1.5.40"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4e9a3287dde973cb206f615bca6511b633d4feac133d7dc61c1b758ac2718de6"
+checksum = "33df1246aa3f336b63bba56d5306096ad513cfadc96aa9371b83e55d16eba8da"
 dependencies = [
  "crossbeam",
  "crossbeam-channel",
@@ -2937,9 +2937,9 @@ checksum = "cda74da7e1a664f795bb1f8a87ec406fb89a02522cf6e50620d016add6dbbf5c"
 
 [[package]]
 name = "tokio"
-version = "1.21.1"
+version = "1.21.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0020c875007ad96677dcc890298f4b942882c5d4eb7cc8f439fc3bf813dc9c95"
+checksum = "a9e03c497dc955702ba729190dc4aac6f2a0ce97f913e5b1b5912fc5039d9099"
 dependencies = [
  "autocfg",
  "bytes",
@@ -2947,7 +2947,6 @@ dependencies = [
  "memchr",
  "mio",
  "num_cpus",
- "once_cell",
  "parking_lot",
  "pin-project-lite",
  "signal-hook-registry",
