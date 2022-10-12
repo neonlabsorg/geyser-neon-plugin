@@ -21,7 +21,7 @@ An example configuration file looks like the following:
     "producer_send_max_retries": "100",
     "message_timeout_ms": "60000",
     "kafka_log_level": "Info",
-    "global_log_level": "Info",
+    "global_log_level": "Info"
 }
 ```
 In order to load the plugin at the start of the Solana validator it is necessary to add the parameter
