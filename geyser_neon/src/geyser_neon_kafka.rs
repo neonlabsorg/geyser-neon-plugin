@@ -122,7 +122,7 @@ impl GeyserPluginKafka {
     ) {
         info!(
             "Rdkafka logging level will be set to {:?}",
-            Into::<RDKafkaLogLevel>::into(&config.rdkafka_log_level)
+            Into::<RDKafkaLogLevel>::into(&config.kafka_log_level)
         );
 
         self.logger.set_level((&config.global_log_level).into());
