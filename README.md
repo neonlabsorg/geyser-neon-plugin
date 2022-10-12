@@ -7,8 +7,9 @@ The geyser_neon asynchronously sends data from the [geyser plugins interface](ht
 2. Kafka cluster
 
 ### Configuration File Format
-The plugin is configured using the input configuration file. An example
-configuration file looks like the following:
+The plugin is configured using the input configuration file, read the [librdkafka documentation](https://docs.confluent.io/5.5.1/clients/librdkafka/md_CONFIGURATION.html) to set the optimal producer parameters.
+\
+An example configuration file looks like the following:
 ```
 {
     "libpath": "/home/user/libgeyser_neon.so",
@@ -18,7 +19,7 @@ configuration file looks like the following:
     "notify_transaction_topic": "notify_transaction",
     "notify_block_topic": "notify_block",
     "producer_send_max_retries": "100",
-    "message_timeout_ms": "5000",
+    "message_timeout_ms": "60000",
     "kafka_log_level": "Info",
     "global_log_level": "Info",
 }
