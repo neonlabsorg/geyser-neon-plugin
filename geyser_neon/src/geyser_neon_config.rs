@@ -85,6 +85,6 @@ pub struct GeyserPluginKafkaConfig {
     // This is the maximum time librdkafka may use to deliver a message (including retries)
     // From 0 to 2147483647 (i32::MAX)
     pub message_timeout_ms: String,
-    pub rdkafka_log_level: LogLevel,
+    pub kafka_log_level: LogLevel,
     pub global_log_level: GlobalLogLevel,
 }

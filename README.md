@@ -19,7 +19,7 @@ configuration file looks like the following:
     "notify_block_topic": "notify_block",
     "producer_send_max_retries": "100",
     "message_timeout_ms": "5000",
-    "rdkafka_log_level": "Info",
+    "kafka_log_level": "Info",
     "global_log_level": "Info",
 }
 ```
