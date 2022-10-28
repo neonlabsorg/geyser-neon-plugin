@@ -22,7 +22,7 @@ impl KafkaProducer {
             .set("message.timeout.ms", &config.message_timeout_ms)
             .set("security.protocol", "SASL_SSL")
             .set("sasl.mechanism", "PLAIN")
-            .set("sasl.username", &config.sasl_user)
+            .set("sasl.username", &config.sasl_username)
             .set("sasl.password", &config.sasl_password)
             .set_log_level((&config.kafka_log_level).into())
             .set(
