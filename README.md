@@ -3,7 +3,7 @@
 The geyser_neon asynchronously sends data from the [geyser plugins interface](https://docs.solana.com/developing/plugins/geyser-plugins) to Kafka using [rdkafka](https://github.com/fede1024/rust-rdkafka).
 
 ### Requirements
-1. Solana Validator 1.11.10
+1. Solana Validator 1.13.3
 2. Kafka cluster
 
 ### Configuration File Format
