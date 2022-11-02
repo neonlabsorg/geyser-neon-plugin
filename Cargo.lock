@@ -739,9 +739,9 @@ dependencies = [
 
 [[package]]
 name = "fast_log"
-version = "1.5.40"
+version = "1.5.42"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "33df1246aa3f336b63bba56d5306096ad513cfadc96aa9371b83e55d16eba8da"
+checksum = "2f08833864eff84307f9574a882573c57393cb7ea045444caeccf8dfdfc957b2"
 dependencies = [
  "crossbeam",
  "crossbeam-channel",
