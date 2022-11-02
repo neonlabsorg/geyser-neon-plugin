@@ -16,8 +16,10 @@ An example configuration file looks like the following:
 {
     "libpath": "/home/user/libgeyser_neon.so",
     "brokers_list": "167.235.75.213:9092,159.69.197.26:9092,167.235.151.85:9092",
-    "sasl.username": "username",
-    "sasl.password": "password",
+    "sasl_username": "username",
+    "sasl_password": "password",
+    "sasl_mechanism": "SCRAM-SHA-512",
+    "security_protocol": "SASL_SSL",
     "update_account_topic": "update_account",
     "update_slot_topic": "update_slot",
     "notify_transaction_topic": "notify_transaction",
