@@ -20,6 +20,10 @@ impl KafkaProducer {
         let future_producer: FutureProducer = ClientConfig::new()
             .set("bootstrap.servers", &config.brokers_list)
             .set("message.timeout.ms", &config.message_timeout_ms)
+            .set("security.protocol", &config.security_protocol)
+            .set("sasl.mechanism", &config.sasl_mechanism)
+            .set("sasl.username", &config.sasl_username)
+            .set("sasl.password", &config.sasl_password)
             .set_log_level((&config.kafka_log_level).into())
             .set(
                 "message.send.max.retries",

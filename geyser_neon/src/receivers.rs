@@ -63,7 +63,8 @@ pub async fn update_account_loop(
     rx: Receiver<UpdateAccount>,
     should_stop: Arc<AtomicBool>,
 ) {
-    if let Ok(producer) = KafkaProducer::new(config.clone()) {
+    let producer_result = KafkaProducer::new(config.clone());
+    if let Ok(producer) = producer_result {
         info!("Created KafkaProducer for update_account_loop!");
         while !should_stop.load(Relaxed) {
             if let Ok(update_account) = rx.recv_async().await {
@@ -82,6 +83,11 @@ pub async fn update_account_loop(
                 });
             }
         }
+    } else {
+        panic!(
+            "Failed to create Kafka producer for update_account_loop: {:?}",
+            producer_result.err()
+        );
     }
 }
 
@@ -91,7 +97,8 @@ pub async fn update_slot_status_loop(
     rx: Receiver<UpdateSlotStatus>,
     should_stop: Arc<AtomicBool>,
 ) {
-    if let Ok(producer) = KafkaProducer::new(config.clone()) {
+    let producer_result = KafkaProducer::new(config.clone());
+    if let Ok(producer) = producer_result {
         info!("Created KafkaProducer for update_slot_status_loop!");
         while !should_stop.load(Relaxed) {
             if let Ok(update_slot_status) = rx.recv_async().await {
@@ -110,6 +117,11 @@ pub async fn update_slot_status_loop(
                 });
             }
         }
+    } else {
+        panic!(
+            "Failed to create Kafka producer for update_slot_status_loop: {:?}",
+            producer_result.err()
+        );
     }
 }
 
@@ -119,6 +131,7 @@ pub async fn notify_transaction_loop(
     rx: Receiver<NotifyTransaction>,
     should_stop: Arc<AtomicBool>,
 ) {
+    let producer_result = KafkaProducer::new(config.clone());
     if let Ok(producer) = KafkaProducer::new(config.clone()) {
         info!("Created KafkaProducer for notify_transaction_loop!");
         while !should_stop.load(Relaxed) {
@@ -138,6 +151,11 @@ pub async fn notify_transaction_loop(
                 });
             }
         }
+    } else {
+        panic!(
+            "Failed to create Kafka producer for notify_transaction_loop: {:?}",
+            producer_result.err()
+        );
     }
 }
 
@@ -147,7 +165,8 @@ pub async fn notify_block_loop(
     rx: Receiver<NotifyBlockMetaData>,
     should_stop: Arc<AtomicBool>,
 ) {
-    if let Ok(producer) = KafkaProducer::new(config.clone()) {
+    let producer_result = KafkaProducer::new(config.clone());
+    if let Ok(producer) = producer_result {
         info!("Created KafkaProducer for notify_block_loop!");
         while !should_stop.load(Relaxed) {
             if let Ok(notify_block) = rx.recv_async().await {
@@ -166,5 +185,10 @@ pub async fn notify_block_loop(
                 });
             }
         }
+    } else {
+        panic!(
+            "Failed to create Kafka producer for notify_transaction_loop: {:?}",
+            producer_result.err()
+        );
     }
 }

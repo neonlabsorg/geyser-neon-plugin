@@ -74,6 +74,10 @@ impl From<&GlobalLogLevel> for LevelFilter {
 pub struct GeyserPluginKafkaConfig {
     // Servers list in kafka format
     pub brokers_list: String,
+    pub sasl_username: String,
+    pub sasl_password: String,
+    pub sasl_mechanism: String,
+    pub security_protocol: String,
     pub update_account_topic: String,
     pub update_slot_topic: String,
     pub notify_transaction_topic: String,
