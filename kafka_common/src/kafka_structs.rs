@@ -1,6 +1,7 @@
 use std::fmt;
 
 use serde::{Deserialize, Serialize};
+use serde_with::with_prefix;
 use solana_account_decoder::parse_token::UiTokenAmount;
 use solana_geyser_plugin_interface::geyser_plugin_interface::{
     ReplicaAccountInfo, ReplicaAccountInfoV2, ReplicaAccountInfoVersions, ReplicaBlockInfo,
@@ -109,6 +110,7 @@ impl From<&ReplicaAccountInfoV2<'_>> for KafkaReplicaAccountInfoV2 {
 }
 
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
 pub enum KafkaReplicaTransactionInfoVersions {
     V0_0_1(KafkaReplicaTransactionInfo),
     V0_0_2(KafkaReplicaTransactionInfoV2),
@@ -227,6 +229,9 @@ impl From<&LoadedMessage<'_>> for KafkaLoadedMessage {
     }
 }
 
+with_prefix!(transaction "transaction_");
+with_prefix!(transaction_meta "transaction_meta_");
+
 /// Information about a transaction
 #[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
 pub struct KafkaReplicaTransactionInfo {
@@ -237,9 +242,11 @@ pub struct KafkaReplicaTransactionInfo {
     pub is_vote: bool,
 
     /// The sanitized transaction.
+    #[serde(flatten, with = "transaction")]
     pub transaction: KafkaSanitizedTransaction,
 
     /// Metadata of the transaction status.
+    #[serde(flatten, with = "transaction_meta")]
     pub transaction_status_meta: KafkaTransactionStatusMeta,
 }
 
@@ -253,9 +260,11 @@ pub struct KafkaReplicaTransactionInfoV2 {
     pub is_vote: bool,
 
     /// The sanitized transaction.
+    #[serde(flatten, with = "transaction")]
     pub transaction: KafkaSanitizedTransaction,
 
     /// Metadata of the transaction status.
+    #[serde(flatten, with = "transaction_meta")]
     pub transaction_status_meta: KafkaTransactionStatusMeta,
 
     /// The transaction's index in the block
@@ -352,6 +361,7 @@ impl From<&TransactionStatusMeta> for KafkaTransactionStatusMeta {
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(untagged)]
 pub enum KafkaReplicaAccountInfoVersions {
     V0_0_1(KafkaReplicaAccountInfo),
     V0_0_2(KafkaReplicaAccountInfoV2),
@@ -371,6 +381,7 @@ impl From<ReplicaAccountInfoVersions<'_>> for KafkaReplicaAccountInfoVersions {
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(untagged)]
 pub enum KafkaReplicaBlockInfoVersions {
     V0_0_1(KafkaReplicaBlockInfo),
 }
@@ -406,6 +417,7 @@ impl From<&ReplicaBlockInfo<'_>> for KafkaReplicaBlockInfo {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UpdateAccount {
+    #[serde(flatten)]
     pub account: KafkaReplicaAccountInfoVersions,
     pub slot: u64,
     pub is_startup: bool,
@@ -455,11 +467,13 @@ impl From<SlotStatus> for KafkaSlotStatus {
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct NotifyTransaction {
+    #[serde(flatten)]
     pub transaction_info: KafkaReplicaTransactionInfoVersions,
     pub slot: u64,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct NotifyBlockMetaData {
+    #[serde(flatten)]
     pub block_info: KafkaReplicaBlockInfoVersions,
 }
