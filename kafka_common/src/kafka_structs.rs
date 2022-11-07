@@ -1,5 +1,6 @@
 use std::fmt;
 
+use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use serde_with::with_prefix;
 use solana_account_decoder::parse_token::UiTokenAmount;
@@ -428,6 +429,7 @@ pub struct UpdateSlotStatus {
     pub slot: u64,
     pub parent: Option<u64>,
     pub status: KafkaSlotStatus,
+    pub retrieved_time: NaiveDateTime,
 }
 
 /// The current status of a slot

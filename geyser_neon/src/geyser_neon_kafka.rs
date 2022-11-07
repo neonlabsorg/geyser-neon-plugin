@@ -4,6 +4,7 @@ use std::{
     sync::{atomic::AtomicBool, Arc},
 };
 
+use chrono::Utc;
 use flume::Sender;
 use kafka_common::kafka_structs::{
     KafkaReplicaAccountInfoVersions, KafkaReplicaBlockInfoVersions,
@@ -258,6 +259,7 @@ impl GeyserPlugin for GeyserPluginKafka {
                 slot,
                 is_startup,
             };
+
             match account_tx.send_async(update_account).await {
                 Ok(_) => (),
                 Err(e) => error!("Failed to send UpdateAccount, error: {e}"),
@@ -275,13 +277,16 @@ impl GeyserPlugin for GeyserPluginKafka {
     ) -> Result<()> {
         let status: KafkaSlotStatus = status.into();
         let slot_status_tx = self.slot_status_tx.clone();
+        let retrieved_time = Utc::now().naive_utc();
 
         self.runtime.spawn(async move {
             let update_account = UpdateSlotStatus {
                 slot,
                 parent,
                 status,
+                retrieved_time,
             };
+
             match slot_status_tx.send_async(update_account).await {
                 Ok(_) => (),
                 Err(e) => error!("Failed to send UpdateSlotStatus, error: {e}"),
