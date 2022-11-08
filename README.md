@@ -25,6 +25,7 @@ An example configuration file looks like the following:
     "notify_transaction_topic": "notify_transaction",
     "notify_block_topic": "notify_block",
     "producer_send_max_retries": "100",
+    "producer_queue_max_messages": "25000",
     "message_timeout_ms": "60000",
     "kafka_log_level": "Info",
     "global_log_level": "Info"

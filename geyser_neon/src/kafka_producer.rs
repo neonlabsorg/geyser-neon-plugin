@@ -29,6 +29,10 @@ impl KafkaProducer {
                 "message.send.max.retries",
                 &config.producer_send_max_retries,
             )
+            .set(
+                "queue.buffering.max.messages",
+                &config.producer_queue_max_messages,
+            )
             .create()?;
 
         Ok(KafkaProducer {
