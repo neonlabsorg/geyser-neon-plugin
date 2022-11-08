@@ -14,7 +14,7 @@ bytemuck = "1.12.2"
 flume = "0.10.14"
 chrono = { version = "0.4.22", features = ["serde"] }
 log = "0.4.17"
-fast_log = { version = "1.5.42" }
+fast_log = { version = "1.5.43" }
 serde = "1.0.147"
 serde_derive = "1.0.147"
 serde_json = "1.0.87"
