@@ -84,6 +84,7 @@ pub struct GeyserPluginKafkaConfig {
     pub notify_block_topic: String,
     // From 0 to 2147483647 (i32::MAX),
     pub producer_send_max_retries: String,
+    pub producer_queue_max_messages: String,
     // This value is only enforced locally and limits the time a produced message waits for successful delivery.
     // A time of 0 is infinite.
     // This is the maximum time librdkafka may use to deliver a message (including retries)
