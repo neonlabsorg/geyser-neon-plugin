@@ -253,19 +253,16 @@ impl GeyserPlugin for GeyserPluginKafka {
         let account: KafkaReplicaAccountInfoVersions = account.into();
         let account_tx = self.account_tx.clone();
 
-        self.runtime.spawn(async move {
-            let update_account = UpdateAccount {
-                account,
-                slot,
-                is_startup,
-            };
+        let update_account = UpdateAccount {
+            account,
+            slot,
+            is_startup,
+        };
 
-            match account_tx.send_async(update_account).await {
-                Ok(_) => (),
-                Err(e) => error!("Failed to send UpdateAccount, error: {e}"),
-            }
-        });
-
+        match account_tx.send(update_account) {
+            Ok(_) => (),
+            Err(e) => error!("Failed to send UpdateAccount, error: {e}"),
+        }
         Ok(())
     }
 
@@ -279,19 +276,17 @@ impl GeyserPlugin for GeyserPluginKafka {
         let slot_status_tx = self.slot_status_tx.clone();
         let retrieved_time = Utc::now().naive_utc();
 
-        self.runtime.spawn(async move {
-            let update_account = UpdateSlotStatus {
-                slot,
-                parent,
-                status,
-                retrieved_time,
-            };
+        let update_account = UpdateSlotStatus {
+            slot,
+            parent,
+            status,
+            retrieved_time,
+        };
 
-            match slot_status_tx.send_async(update_account).await {
-                Ok(_) => (),
-                Err(e) => error!("Failed to send UpdateSlotStatus, error: {e}"),
-            }
-        });
+        match slot_status_tx.send(update_account) {
+            Ok(_) => (),
+            Err(e) => error!("Failed to send UpdateSlotStatus, error: {e}"),
+        }
 
         Ok(())
     }
@@ -310,17 +305,15 @@ impl GeyserPlugin for GeyserPluginKafka {
         let transaction_info: KafkaReplicaTransactionInfoVersions = transaction_info.into();
         let transaction_tx = self.transaction_tx.clone();
 
-        self.runtime.spawn(async move {
-            let notify_transaction = NotifyTransaction {
-                transaction_info,
-                slot,
-            };
+        let notify_transaction = NotifyTransaction {
+            transaction_info,
+            slot,
+        };
 
-            match transaction_tx.send_async(notify_transaction).await {
-                Ok(_) => (),
-                Err(e) => error!("Failed to send NotifyTransaction, error: {e}"),
-            }
-        });
+        match transaction_tx.send(notify_transaction) {
+            Ok(_) => (),
+            Err(e) => error!("Failed to send NotifyTransaction, error: {e}"),
+        }
 
         Ok(())
     }
@@ -329,14 +322,12 @@ impl GeyserPlugin for GeyserPluginKafka {
         let block_info: KafkaReplicaBlockInfoVersions = block_info.into();
         let block_metadata_tx = self.block_metadata_tx.clone();
 
-        self.runtime.spawn(async move {
-            let notify_block = NotifyBlockMetaData { block_info };
+        let notify_block = NotifyBlockMetaData { block_info };
 
-            match block_metadata_tx.send_async(notify_block).await {
-                Ok(_) => (),
-                Err(e) => error!("Failed to send NotifyBlockMetaData, error: {e}"),
-            }
-        });
+        match block_metadata_tx.send(notify_block) {
+            Ok(_) => (),
+            Err(e) => error!("Failed to send NotifyBlockMetaData, error: {e}"),
+        }
 
         Ok(())
     }

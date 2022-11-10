@@ -70,8 +70,9 @@ pub async fn update_account_loop(
             if let Ok(update_account) = rx.recv_async().await {
                 let producer = producer.clone();
                 let config = config.clone();
+                let hash = update_account.get_hash();
+
                 runtime.spawn(async move {
-                    let hash = update_account.get_hash();
                     serialize_and_send(
                         config,
                         producer,
@@ -104,8 +105,9 @@ pub async fn update_slot_status_loop(
             if let Ok(update_slot_status) = rx.recv_async().await {
                 let producer = producer.clone();
                 let config = config.clone();
+                let hash = update_slot_status.get_hash();
+
                 runtime.spawn(async move {
-                    let hash = update_slot_status.get_hash();
                     serialize_and_send(
                         config,
                         producer,
@@ -138,8 +140,9 @@ pub async fn notify_transaction_loop(
             if let Ok(notify_transaction) = rx.recv_async().await {
                 let producer = producer.clone();
                 let config = config.clone();
+                let hash = notify_transaction.get_hash();
+
                 runtime.spawn(async move {
-                    let hash = notify_transaction.get_hash();
                     serialize_and_send(
                         config,
                         producer,
@@ -172,8 +175,9 @@ pub async fn notify_block_loop(
             if let Ok(notify_block) = rx.recv_async().await {
                 let producer = producer.clone();
                 let config = config.clone();
+                let hash = notify_block.get_hash().to_string();
+
                 runtime.spawn(async move {
-                    let hash = notify_block.get_hash().to_string();
                     serialize_and_send(
                         config,
                         producer,

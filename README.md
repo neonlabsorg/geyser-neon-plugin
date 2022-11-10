@@ -26,6 +26,11 @@ An example configuration file looks like the following:
     "notify_block_topic": "notify_block",
     "producer_send_max_retries": "100",
     "producer_queue_max_messages": "25000",
+    "compression_codec": "lz4",
+    "compression_level": "12",
+    "batch_size": "100000",
+    "linger_ms": "100",
+    "acks": "-1",
     "message_timeout_ms": "60000",
     "kafka_log_level": "Info",
     "global_log_level": "Info"

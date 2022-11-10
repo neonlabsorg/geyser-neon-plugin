@@ -33,6 +33,12 @@ impl KafkaProducer {
                 "queue.buffering.max.messages",
                 &config.producer_queue_max_messages,
             )
+            .set("compression.codec", &config.compression_codec)
+            .set("compression.level", &config.compression_level)
+            .set("batch.size", &config.batch_size)
+            .set("batch.num.messages", &config.batch_num_messages)
+            .set("linger.ms", &config.linger_ms)
+            .set("acks", &config.acks)
             .create()?;
 
         Ok(KafkaProducer {
