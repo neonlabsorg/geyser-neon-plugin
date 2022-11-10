@@ -1,9 +1,10 @@
-use std::{sync::Arc, time::Duration};
+use std::sync::Arc;
 
 use rdkafka::{
     error::KafkaResult,
     message::OwnedHeaders,
     producer::{future_producer::OwnedDeliveryResult, FutureProducer, FutureRecord},
+    util::Timeout,
     ClientConfig,
 };
 
@@ -59,7 +60,7 @@ impl KafkaProducer {
         future_record.headers = headers;
 
         self.future_producer
-            .send(future_record, Duration::from_secs(0))
+            .send(future_record, Timeout::Never)
             .await
     }
 }

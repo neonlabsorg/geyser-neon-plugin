@@ -85,6 +85,7 @@ pub struct GeyserPluginKafkaConfig {
     // From 0 to 2147483647 (i32::MAX),
     pub producer_send_max_retries: String,
     pub producer_queue_max_messages: String,
+    pub internal_queue_capacity: usize,
     pub compression_codec: String,
     pub compression_level: String,
     pub batch_size: String,
