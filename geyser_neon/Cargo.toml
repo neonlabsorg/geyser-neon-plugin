@@ -12,7 +12,7 @@ crate-type = ["cdylib", "rlib"]
 bs58 = "0.4.0"
 bytemuck = "1.12.3"
 flume = "0.10.14"
-chrono = { version = "0.4.22", features = ["serde"] }
+chrono = { version = "0.4.23", features = ["serde"] }
 log = "0.4.17"
 fast_log = { version = "1.5.44" }
 serde = "1.0.147"
