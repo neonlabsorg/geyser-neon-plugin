@@ -47,14 +47,10 @@ pub struct GeyserPluginKafka {
     runtime: Arc<Runtime>,
     config: Option<Arc<GeyserPluginKafkaConfig>>,
     logger: &'static Logger,
-    account_tx: Sender<UpdateAccount>,
-    slot_status_tx: Sender<UpdateSlotStatus>,
-    transaction_tx: Sender<NotifyTransaction>,
-    block_metadata_tx: Sender<NotifyBlockMetaData>,
-    account_rx: Receiver<UpdateAccount>,
-    slot_status_rx: Receiver<UpdateSlotStatus>,
-    transaction_rx: Receiver<NotifyTransaction>,
-    block_metadata_rx: Receiver<NotifyBlockMetaData>,
+    account_tx: Option<Sender<UpdateAccount>>,
+    slot_status_tx: Option<Sender<UpdateSlotStatus>>,
+    transaction_tx: Option<Sender<NotifyTransaction>>,
+    block_metadata_tx: Option<Sender<NotifyBlockMetaData>>,
     should_stop: Arc<AtomicBool>,
     update_account_jhandle: Option<JoinHandle<()>>,
     update_slot_status_jhandle: Option<JoinHandle<()>>,
@@ -87,23 +83,14 @@ impl GeyserPluginKafka {
 
         let should_stop = Arc::new(AtomicBool::new(false));
 
-        let (account_tx, account_rx) = flume::unbounded();
-        let (slot_status_tx, slot_status_rx) = flume::unbounded();
-        let (transaction_tx, transaction_rx) = flume::unbounded();
-        let (block_metadata_tx, block_metadata_rx) = flume::unbounded();
-
         Self {
             runtime,
             config: None,
             logger,
-            account_tx,
-            slot_status_tx,
-            transaction_tx,
-            block_metadata_tx,
-            account_rx,
-            slot_status_rx,
-            transaction_rx,
-            block_metadata_rx,
+            account_tx: None,
+            slot_status_tx: None,
+            transaction_tx: None,
+            block_metadata_tx: None,
             should_stop,
             update_account_jhandle: None,
             update_slot_status_jhandle: None,
@@ -200,12 +187,26 @@ impl GeyserPlugin for GeyserPluginKafka {
             Ok(config) => {
                 let config = Arc::new(config);
                 self.config = Some(config.clone());
+
+                let (account_tx, account_rx) = flume::bounded(config.internal_queue_capacity);
+                let (slot_status_tx, slot_status_rx) =
+                    flume::bounded(config.internal_queue_capacity);
+                let (transaction_tx, transaction_rx) =
+                    flume::bounded(config.internal_queue_capacity);
+                let (block_metadata_tx, block_metadata_rx) =
+                    flume::bounded(config.internal_queue_capacity);
+
+                self.account_tx = Some(account_tx);
+                self.slot_status_tx = Some(slot_status_tx);
+                self.transaction_tx = Some(transaction_tx);
+                self.block_metadata_tx = Some(block_metadata_tx);
+
                 self.run(
                     config,
-                    self.account_rx.clone(),
-                    self.slot_status_rx.clone(),
-                    self.transaction_rx.clone(),
-                    self.block_metadata_rx.clone(),
+                    account_rx,
+                    slot_status_rx,
+                    transaction_rx,
+                    block_metadata_rx,
                     self.should_stop.clone(),
                 );
             }
@@ -253,19 +254,19 @@ impl GeyserPlugin for GeyserPluginKafka {
         let account: KafkaReplicaAccountInfoVersions = account.into();
         let account_tx = self.account_tx.clone();
 
-        self.runtime.spawn(async move {
-            let update_account = UpdateAccount {
-                account,
-                slot,
-                is_startup,
-            };
+        let update_account = UpdateAccount {
+            account,
+            slot,
+            is_startup,
+        };
 
-            match account_tx.send_async(update_account).await {
-                Ok(_) => (),
-                Err(e) => error!("Failed to send UpdateAccount, error: {e}"),
-            }
-        });
-
+        match account_tx
+            .expect("Channel was not created!")
+            .send(update_account)
+        {
+            Ok(_) => (),
+            Err(e) => error!("Failed to send UpdateAccount, error: {e}"),
+        }
         Ok(())
     }
 
@@ -279,19 +280,20 @@ impl GeyserPlugin for GeyserPluginKafka {
         let slot_status_tx = self.slot_status_tx.clone();
         let retrieved_time = Utc::now().naive_utc();
 
-        self.runtime.spawn(async move {
-            let update_account = UpdateSlotStatus {
-                slot,
-                parent,
-                status,
-                retrieved_time,
-            };
+        let update_account = UpdateSlotStatus {
+            slot,
+            parent,
+            status,
+            retrieved_time,
+        };
 
-            match slot_status_tx.send_async(update_account).await {
-                Ok(_) => (),
-                Err(e) => error!("Failed to send UpdateSlotStatus, error: {e}"),
-            }
-        });
+        match slot_status_tx
+            .expect("Channel was not created!")
+            .send(update_account)
+        {
+            Ok(_) => (),
+            Err(e) => error!("Failed to send UpdateSlotStatus, error: {e}"),
+        }
 
         Ok(())
     }
@@ -310,17 +312,18 @@ impl GeyserPlugin for GeyserPluginKafka {
         let transaction_info: KafkaReplicaTransactionInfoVersions = transaction_info.into();
         let transaction_tx = self.transaction_tx.clone();
 
-        self.runtime.spawn(async move {
-            let notify_transaction = NotifyTransaction {
-                transaction_info,
-                slot,
-            };
+        let notify_transaction = NotifyTransaction {
+            transaction_info,
+            slot,
+        };
 
-            match transaction_tx.send_async(notify_transaction).await {
-                Ok(_) => (),
-                Err(e) => error!("Failed to send NotifyTransaction, error: {e}"),
-            }
-        });
+        match transaction_tx
+            .expect("Channel was not created!")
+            .send(notify_transaction)
+        {
+            Ok(_) => (),
+            Err(e) => error!("Failed to send NotifyTransaction, error: {e}"),
+        }
 
         Ok(())
     }
@@ -329,14 +332,15 @@ impl GeyserPlugin for GeyserPluginKafka {
         let block_info: KafkaReplicaBlockInfoVersions = block_info.into();
         let block_metadata_tx = self.block_metadata_tx.clone();
 
-        self.runtime.spawn(async move {
-            let notify_block = NotifyBlockMetaData { block_info };
+        let notify_block = NotifyBlockMetaData { block_info };
 
-            match block_metadata_tx.send_async(notify_block).await {
-                Ok(_) => (),
-                Err(e) => error!("Failed to send NotifyBlockMetaData, error: {e}"),
-            }
-        });
+        match block_metadata_tx
+            .expect("Channel was not created!")
+            .send(notify_block)
+        {
+            Ok(_) => (),
+            Err(e) => error!("Failed to send NotifyBlockMetaData, error: {e}"),
+        }
 
         Ok(())
     }

@@ -1,9 +1,10 @@
-use std::{sync::Arc, time::Duration};
+use std::sync::Arc;
 
 use rdkafka::{
     error::KafkaResult,
     message::OwnedHeaders,
     producer::{future_producer::OwnedDeliveryResult, FutureProducer, FutureRecord},
+    util::Timeout,
     ClientConfig,
 };
 
@@ -33,6 +34,12 @@ impl KafkaProducer {
                 "queue.buffering.max.messages",
                 &config.producer_queue_max_messages,
             )
+            .set("compression.codec", &config.compression_codec)
+            .set("compression.level", &config.compression_level)
+            .set("batch.size", &config.batch_size)
+            .set("batch.num.messages", &config.batch_num_messages)
+            .set("linger.ms", &config.linger_ms)
+            .set("acks", &config.acks)
             .create()?;
 
         Ok(KafkaProducer {
@@ -53,7 +60,7 @@ impl KafkaProducer {
         future_record.headers = headers;
 
         self.future_producer
-            .send(future_record, Duration::from_secs(0))
+            .send(future_record, Timeout::Never)
             .await
     }
 }
