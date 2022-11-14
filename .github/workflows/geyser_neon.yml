@@ -11,7 +11,7 @@ jobs:
         rust:
           - stable
     steps:
-      - run: sudo apt install -y libsasl2-dev
+      - run: sudo apt install -y libsasl2-dev libzstd-dev
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
         with:
@@ -30,7 +30,7 @@ jobs:
         rust:
           - stable
     steps:
-      - run: sudo apt install -y libsasl2-dev
+      - run: sudo apt install -y libsasl2-dev libzstd-dev
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
         with:
@@ -69,7 +69,7 @@ jobs:
         rust:
           - stable
     steps:
-      - run: sudo apt install -y libsasl2-dev
+      - run: sudo apt install -y libsasl2-dev libzstd-dev
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
         with:
