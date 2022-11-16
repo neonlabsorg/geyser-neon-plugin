@@ -26,6 +26,7 @@ An example configuration file looks like the following:
     "notify_block_topic": "notify_block",
     "producer_send_max_retries": "100",
     "producer_queue_max_messages": "25000",
+    "producer_message_max_bytes": "104857600",
     "internal_queue_capacity": 20000,
     "compression_codec": "lz4",
     "compression_level": "12",

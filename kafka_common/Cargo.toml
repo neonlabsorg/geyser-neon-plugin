@@ -12,7 +12,7 @@ solana-transaction-status = {version = "=1.13.4"}
 solana-program = { version = "=1.13.4" }
 solana-account-decoder= { version = "=1.13.4" }
 
-chrono = "0.4.22"
+chrono = "0.4.23"
 serde = "1.0.147"
 serde_with = "2.0.1"
 serde_derive = "1.0.147"

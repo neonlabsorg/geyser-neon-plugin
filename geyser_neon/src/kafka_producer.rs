@@ -34,6 +34,7 @@ impl KafkaProducer {
                 "queue.buffering.max.messages",
                 &config.producer_queue_max_messages,
             )
+            .set("message.max.bytes", &config.producer_message_max_bytes)
             .set("compression.codec", &config.compression_codec)
             .set("compression.level", &config.compression_level)
             .set("batch.size", &config.batch_size)
