@@ -187,14 +187,16 @@ impl GeyserPlugin for GeyserPluginKafka {
             Ok(config) => {
                 let config = Arc::new(config);
                 self.config = Some(config.clone());
+                let internal_queue_capacity = config
+                    .internal_queue_capacity
+                    .parse::<usize>()
+                    .unwrap_or(30000);
 
-                let (account_tx, account_rx) = flume::bounded(config.internal_queue_capacity);
-                let (slot_status_tx, slot_status_rx) =
-                    flume::bounded(config.internal_queue_capacity);
-                let (transaction_tx, transaction_rx) =
-                    flume::bounded(config.internal_queue_capacity);
+                let (account_tx, account_rx) = flume::bounded(internal_queue_capacity);
+                let (slot_status_tx, slot_status_rx) = flume::bounded(internal_queue_capacity);
+                let (transaction_tx, transaction_rx) = flume::bounded(internal_queue_capacity);
                 let (block_metadata_tx, block_metadata_rx) =
-                    flume::bounded(config.internal_queue_capacity);
+                    flume::bounded(internal_queue_capacity);
 
                 self.account_tx = Some(account_tx);
                 self.slot_status_tx = Some(slot_status_tx);
