@@ -11,6 +11,8 @@ The plugin is configured using the input configuration file, read the [librdkafk
 \
 In order to configure an SSL certificate, see the [librdkafka documentation](https://github.com/edenhill/librdkafka/blob/master/INTRODUCTION.md#ssl).
 \
+Path to the log file is **/var/log/neon/geyser.log**
+\
 An example configuration file looks like the following:
 ```
 {

@@ -74,7 +74,7 @@ impl GeyserPluginKafka {
         );
 
         let logger: &'static Logger = fast_log::init(Config::new().console().file_split(
-            "/var/logs/neon_kafka.log",
+            "/var/log/neon/geyser.log",
             LogSize::KB(512),
             RollingType::All,
             LogPacker {},
