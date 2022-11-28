@@ -37,6 +37,7 @@ use fast_log::{
 use flume::Receiver;
 
 use crate::{
+    build_info::get_build_info,
     geyser_neon_config::GeyserPluginKafkaConfig,
     receivers::{
         notify_block_loop, notify_transaction_loop, update_account_loop, update_slot_status_loop,
@@ -119,6 +120,8 @@ impl GeyserPluginKafka {
             "Global logging level is set to {:?}",
             Into::<LevelFilter>::into(&config.global_log_level)
         );
+
+        info!("{}", get_build_info());
 
         let update_account_jhandle = Some(self.runtime.spawn(update_account_loop(
             self.runtime.clone(),

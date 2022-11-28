@@ -1,3 +1,4 @@
+pub mod build_info;
 pub mod geyser_neon_config;
 pub mod geyser_neon_kafka;
 pub mod kafka_producer;
