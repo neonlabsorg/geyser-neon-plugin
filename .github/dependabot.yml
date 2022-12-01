@@ -1,4 +1,10 @@
 version: 2
+registries:
+    dockerhub:
+      type: docker-registry
+      url: https://registry.hub.docker.com
+      username: ${{ secrets.DHUBU }}
+      password: ${{ secrets.DHUBP }}
 updates:
     - package-ecosystem: "cargo"
       directory: "/"
