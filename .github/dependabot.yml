@@ -7,6 +7,8 @@ registries:
       password: ${{ secrets.DHUBP }}
 updates:
     - package-ecosystem: "cargo"
+      registries:
+        - dockerhub
       directory: "/"
       schedule:
           interval: "daily"
