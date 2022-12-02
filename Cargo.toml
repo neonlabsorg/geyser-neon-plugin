@@ -5,3 +5,6 @@ members = [
     "geyser_neon",
     "kafka_common"
 ]
+
+[profile.release]
+lto = "thin"
