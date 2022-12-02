@@ -97,8 +97,11 @@ jobs:
       - name: Build and push for geyser plugin v2
         env:
           IMAGE_TAG: ${{ github.sha }}
+          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
         uses: docker/build-push-action@v3
         with:
           file: Dockerfile
           push: true
-          tags: neonlabsorg/geyser-neon-solana:${{ env.IMAGE_TAG }}
+          tags: |
+            neonlabsorg/geyser-neon-solana:${{ env.IMAGE_TAG }}
+            neonlabsorg/geyser-neon-solana:${{ env.BRANCH_NAME }}
