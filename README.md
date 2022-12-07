@@ -1,10 +1,10 @@
-### Geyser neon
-
+## Geyser neon
 The geyser_neon asynchronously sends data from the [geyser plugins interface](https://docs.solana.com/developing/plugins/geyser-plugins) to Kafka using [rdkafka](https://github.com/fede1024/rust-rdkafka).
 
 ### Requirements
-1. Solana Validator 1.14.7
+1. Solana Validator 1.14.10
 2. Kafka cluster
+3. Geyser plugin must be compiled with the same version of Rust as the validator itself
 
 ### Configuration File Format
 The plugin is configured using the input configuration file, read the [librdkafka documentation](https://docs.confluent.io/5.5.1/clients/librdkafka/md_CONFIGURATION.html) to set the optimal producer parameters.
