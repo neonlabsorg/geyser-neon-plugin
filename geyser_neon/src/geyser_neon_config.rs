@@ -88,6 +88,7 @@ pub struct GeyserPluginKafkaConfig {
     pub producer_message_max_bytes: String,
     pub producer_request_timeout_ms: String,
     pub producer_retry_backoff_ms: String,
+    pub max_in_flight_requests_per_connection: String,
     pub internal_queue_capacity: String,
     pub compression_codec: String,
     pub compression_level: String,
