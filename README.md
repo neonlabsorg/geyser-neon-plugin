@@ -31,6 +31,7 @@ An example configuration file looks like the following:
     "producer_message_max_bytes": "104857600",
     "producer_request_timeout_ms": "100000",
     "producer_retry_backoff_ms": "1000",
+    "max_in_flight_requests_per_connection": "5",
     "internal_queue_capacity": "30000",
     "compression_codec": "lz4",
     "compression_level": "12",
