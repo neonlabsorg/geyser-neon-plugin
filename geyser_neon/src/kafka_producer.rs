@@ -35,6 +35,12 @@ impl KafkaProducer {
                 &config.producer_queue_max_messages,
             )
             .set("message.max.bytes", &config.producer_message_max_bytes)
+            .set("request.timeout.ms", &config.producer_request_timeout_ms)
+            .set("retry.backoff.ms", &config.producer_retry_backoff_ms)
+            .set(
+                "max.in.flight.requests.per.connection",
+                &config.max_in_flight_requests_per_connection,
+            )
             .set("compression.codec", &config.compression_codec)
             .set("compression.level", &config.compression_level)
             .set("batch.size", &config.batch_size)
