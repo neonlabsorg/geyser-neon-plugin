@@ -52,10 +52,6 @@ async fn serialize_and_send<T: Serialize>(
                     message.len(),
                     e.0
                 );
-                trace!(
-                    "Producer cannot send {message_type} message, error: {}, serialized message {message}",
-                    e.0
-                );
             }
         }
         Err(e) => error!("Failed to serialize {message_type} message, error {e}"),
