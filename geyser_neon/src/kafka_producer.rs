@@ -8,17 +8,17 @@ use rdkafka::{
     ClientConfig,
 };
 
-use crate::geyser_neon_config::GeyserPluginKafkaConfig;
+use crate::{geyser_neon_config::GeyserPluginKafkaConfig, kafka_producer_stats::ContextWithStats};
 
 #[derive(Clone)]
 pub struct KafkaProducer {
-    pub future_producer: FutureProducer,
+    pub future_producer: FutureProducer<ContextWithStats>,
     pub config: Arc<GeyserPluginKafkaConfig>,
 }
 
 impl KafkaProducer {
     pub fn new(config: Arc<GeyserPluginKafkaConfig>) -> KafkaResult<Self> {
-        let future_producer: FutureProducer = ClientConfig::new()
+        let future_producer: FutureProducer<ContextWithStats> = ClientConfig::new()
             .set("bootstrap.servers", &config.brokers_list)
             .set("message.timeout.ms", &config.message_timeout_ms)
             .set("security.protocol", &config.security_protocol)
@@ -47,7 +47,8 @@ impl KafkaProducer {
             .set("batch.num.messages", &config.batch_num_messages)
             .set("linger.ms", &config.linger_ms)
             .set("acks", &config.acks)
-            .create()?;
+            .set("statistics.interval.ms", &config.statistics_interval_ms)
+            .create_with_context(ContextWithStats)?;
 
         Ok(KafkaProducer {
             future_producer,
