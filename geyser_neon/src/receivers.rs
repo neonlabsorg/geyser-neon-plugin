@@ -48,11 +48,8 @@ async fn serialize_and_send<T: Serialize>(
         Ok(message) => {
             if let Err(e) = producer.send(topic, &message, &hash, None).await {
                 error!(
-                    "Producer cannot send {message_type} message, error: {}",
-                    e.0
-                );
-                trace!(
-                    "Producer cannot send {message_type} message, error: {}, serialized message {message}",
+                    "Producer cannot send {message_type} message with size {}, error: {}",
+                    message.len(),
                     e.0
                 );
             }
