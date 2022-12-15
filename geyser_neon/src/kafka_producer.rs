@@ -8,16 +8,24 @@ use rdkafka::{
     ClientConfig,
 };
 
-use crate::{geyser_neon_config::GeyserPluginKafkaConfig, kafka_producer_stats::ContextWithStats};
+use crate::{
+    geyser_neon_config::GeyserPluginKafkaConfig,
+    kafka_producer_stats::{ContextWithStats, Stats},
+};
 
 #[derive(Clone)]
 pub struct KafkaProducer {
     pub future_producer: FutureProducer<ContextWithStats>,
     pub config: Arc<GeyserPluginKafkaConfig>,
+    pub stats: Arc<Stats>,
 }
 
 impl KafkaProducer {
-    pub fn new(config: Arc<GeyserPluginKafkaConfig>) -> KafkaResult<Self> {
+    pub fn new(
+        config: Arc<GeyserPluginKafkaConfig>,
+        context_with_stats: ContextWithStats,
+    ) -> KafkaResult<Self> {
+        let stats = context_with_stats.stats.clone();
         let future_producer: FutureProducer<ContextWithStats> = ClientConfig::new()
             .set("bootstrap.servers", &config.brokers_list)
             .set("message.timeout.ms", &config.message_timeout_ms)
@@ -48,12 +56,17 @@ impl KafkaProducer {
             .set("linger.ms", &config.linger_ms)
             .set("acks", &config.acks)
             .set("statistics.interval.ms", &config.statistics_interval_ms)
-            .create_with_context(ContextWithStats)?;
+            .create_with_context(context_with_stats)?;
 
         Ok(KafkaProducer {
             future_producer,
             config,
+            stats,
         })
+    }
+
+    pub fn get_stats(&self) -> Arc<Stats> {
+        self.stats.clone()
     }
 
     pub async fn send(

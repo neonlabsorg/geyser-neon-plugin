@@ -39,6 +39,7 @@ use flume::Receiver;
 use crate::{
     build_info::get_build_info,
     geyser_neon_config::GeyserPluginKafkaConfig,
+    kafka_producer_stats::ContextWithStats,
     receivers::{
         notify_block_loop, notify_transaction_loop, update_account_loop, update_slot_status_loop,
     },
@@ -123,10 +124,13 @@ impl GeyserPluginKafka {
 
         info!("{}", get_build_info());
 
+        let ctx_stats = ContextWithStats::default();
+
         let update_account_jhandle = Some(self.runtime.spawn(update_account_loop(
             self.runtime.clone(),
             config.clone(),
             account_rx,
+            ctx_stats.clone(),
             should_stop.clone(),
         )));
 
@@ -134,6 +138,7 @@ impl GeyserPluginKafka {
             self.runtime.clone(),
             config.clone(),
             slot_status_rx,
+            ctx_stats.clone(),
             should_stop.clone(),
         )));
 
@@ -141,6 +146,7 @@ impl GeyserPluginKafka {
             self.runtime.clone(),
             config.clone(),
             transaction_rx,
+            ctx_stats.clone(),
             should_stop.clone(),
         )));
 
@@ -148,6 +154,7 @@ impl GeyserPluginKafka {
             self.runtime.clone(),
             config,
             block_metadata_rx,
+            ctx_stats,
             should_stop,
         )));
 
