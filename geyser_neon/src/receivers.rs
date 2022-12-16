@@ -2,9 +2,9 @@ use flume::Receiver;
 use kafka_common::kafka_structs::{
     NotifyBlockMetaData, NotifyTransaction, UpdateAccount, UpdateSlotStatus,
 };
+use kafka_common::message_type::{GetMessageType, MessageType};
 use log::*;
 use serde::Serialize;
-use std::fmt;
 use std::sync::atomic::Ordering::{self, Relaxed};
 use std::sync::{atomic::AtomicBool, Arc};
 use tokio::runtime::Runtime;
@@ -13,32 +13,14 @@ use crate::geyser_neon_config::GeyserPluginKafkaConfig;
 use crate::kafka_producer::KafkaProducer;
 use crate::kafka_producer_stats::{ContextWithStats, Stats};
 
-enum MessageType {
-    UpdateAccount,
-    UpdateSlot,
-    NotifyTransaction,
-    NotifyBlock,
-}
-
-impl fmt::Display for MessageType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            MessageType::UpdateAccount => write!(f, "UpdateAccount"),
-            MessageType::UpdateSlot => write!(f, "UpdateSlot"),
-            MessageType::NotifyTransaction => write!(f, "NotifyTransaction"),
-            MessageType::NotifyBlock => write!(f, "NotifyBlock"),
-        }
-    }
-}
-
-async fn serialize_and_send<T: Serialize>(
+async fn serialize_and_send<T: Serialize + GetMessageType>(
     config: Arc<GeyserPluginKafkaConfig>,
     mut producer: KafkaProducer,
     message: T,
-    message_type: MessageType,
     hash: String,
     stats: Arc<Stats>,
 ) {
+    let message_type = message.get_type();
     let (topic, counter_send_success, counter_send_failed) = match message_type {
         MessageType::UpdateAccount => (
             &config.update_account_topic,
@@ -103,15 +85,7 @@ pub async fn update_account_loop(
                 let hash = update_account.get_hash();
 
                 runtime.spawn(async move {
-                    serialize_and_send(
-                        config,
-                        producer,
-                        update_account,
-                        MessageType::UpdateAccount,
-                        hash,
-                        stats,
-                    )
-                    .await;
+                    serialize_and_send(config, producer, update_account, hash, stats).await;
                 });
             }
         }
@@ -141,15 +115,7 @@ pub async fn update_slot_status_loop(
                 let hash = update_slot_status.get_hash();
 
                 runtime.spawn(async move {
-                    serialize_and_send(
-                        config,
-                        producer,
-                        update_slot_status,
-                        MessageType::UpdateSlot,
-                        hash,
-                        stats,
-                    )
-                    .await;
+                    serialize_and_send(config, producer, update_slot_status, hash, stats).await;
                 });
             }
         }
@@ -179,15 +145,7 @@ pub async fn notify_transaction_loop(
                 let hash = notify_transaction.get_hash();
 
                 runtime.spawn(async move {
-                    serialize_and_send(
-                        config,
-                        producer,
-                        notify_transaction,
-                        MessageType::NotifyTransaction,
-                        hash,
-                        stats,
-                    )
-                    .await;
+                    serialize_and_send(config, producer, notify_transaction, hash, stats).await;
                 });
             }
         }
@@ -217,15 +175,7 @@ pub async fn notify_block_loop(
                 let hash = notify_block.get_hash().to_string();
 
                 runtime.spawn(async move {
-                    serialize_and_send(
-                        config,
-                        producer,
-                        notify_block,
-                        MessageType::NotifyBlock,
-                        hash,
-                        stats,
-                    )
-                    .await;
+                    serialize_and_send(config, producer, notify_block, hash, stats).await;
                 });
             }
         }
