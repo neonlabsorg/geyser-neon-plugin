@@ -97,6 +97,7 @@ pub struct GeyserPluginKafkaConfig {
     pub linger_ms: String,
     pub acks: String,
     pub statistics_interval_ms: String,
+    pub prometheus_port: String,
     // This value is only enforced locally and limits the time a produced message waits for successful delivery.
     // A time of 0 is infinite.
     // This is the maximum time librdkafka may use to deliver a message (including retries)

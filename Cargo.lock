@@ -1182,6 +1182,7 @@ dependencies = [
  "chrono",
  "fast_log",
  "flume",
+ "hyper",
  "kafka_common",
  "log",
  "prometheus-client",
