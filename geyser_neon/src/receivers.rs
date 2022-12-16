@@ -5,7 +5,7 @@ use kafka_common::kafka_structs::{
 use log::*;
 use serde::Serialize;
 use std::fmt;
-use std::sync::atomic::Ordering::Relaxed;
+use std::sync::atomic::Ordering::{self, Relaxed};
 use std::sync::{atomic::AtomicBool, Arc};
 use tokio::runtime::Runtime;
 
@@ -42,22 +42,22 @@ async fn serialize_and_send<T: Serialize>(
     let (topic, counter_send_success, counter_send_failed) = match message_type {
         MessageType::UpdateAccount => (
             &config.update_account_topic,
-            &stats.kafka_sent_update_account,
+            &stats.kafka_update_account,
             &stats.kafka_error_update_account,
         ),
         MessageType::UpdateSlot => (
             &config.update_slot_topic,
-            &stats.kafka_sent_update_slot,
+            &stats.kafka_update_slot,
             &stats.kafka_error_update_slot,
         ),
         MessageType::NotifyTransaction => (
             &config.notify_transaction_topic,
-            &stats.kafka_sent_notify_transaction,
+            &stats.kafka_notify_transaction,
             &stats.kafka_error_notify_transaction,
         ),
         MessageType::NotifyBlock => (
             &config.notify_block_topic,
-            &stats.kafka_sent_notify_block,
+            &stats.kafka_notify_block,
             &stats.kafka_error_notify_block,
         ),
     };
@@ -73,8 +73,15 @@ async fn serialize_and_send<T: Serialize>(
                 return;
             }
             counter_send_success.inc();
+            stats
+                .kafka_bytes_tx
+                .inner()
+                .fetch_add(message.len() as u64, Ordering::Relaxed);
         }
-        Err(e) => error!("Failed to serialize {message_type} message, error {e}"),
+        Err(e) => {
+            stats.kafka_error_serialize.inc();
+            error!("Failed to serialize {message_type} message, error {e}");
+        }
     }
 }
 
