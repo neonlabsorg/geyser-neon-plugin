@@ -39,6 +39,8 @@ use flume::Receiver;
 use crate::{
     build_info::get_build_info,
     geyser_neon_config::GeyserPluginKafkaConfig,
+    kafka_producer_stats::ContextWithStats,
+    prometheus::start_prometheus,
     receivers::{
         notify_block_loop, notify_transaction_loop, update_account_loop, update_slot_status_loop,
     },
@@ -53,6 +55,7 @@ pub struct GeyserPluginKafka {
     transaction_tx: Option<Sender<NotifyTransaction>>,
     block_metadata_tx: Option<Sender<NotifyBlockMetaData>>,
     should_stop: Arc<AtomicBool>,
+    prometheus_jhandle: Option<JoinHandle<()>>,
     update_account_jhandle: Option<JoinHandle<()>>,
     update_slot_status_jhandle: Option<JoinHandle<()>>,
     notify_transaction_jhandle: Option<JoinHandle<()>>,
@@ -97,6 +100,7 @@ impl GeyserPluginKafka {
             update_slot_status_jhandle: None,
             notify_transaction_jhandle: None,
             notify_block_jhandle: None,
+            prometheus_jhandle: None,
         }
     }
 
@@ -123,10 +127,23 @@ impl GeyserPluginKafka {
 
         info!("{}", get_build_info());
 
+        let ctx_stats = ContextWithStats::default();
+
+        let prometheus_port = config
+            .prometheus_port
+            .parse()
+            .unwrap_or_else(|e| panic!("Wrong prometheus port number, error: {e}"));
+
+        let prometheus_jhandle = Some(
+            self.runtime
+                .spawn(start_prometheus(ctx_stats.stats.clone(), prometheus_port)),
+        );
+
         let update_account_jhandle = Some(self.runtime.spawn(update_account_loop(
             self.runtime.clone(),
             config.clone(),
             account_rx,
+            ctx_stats.clone(),
             should_stop.clone(),
         )));
 
@@ -134,6 +151,7 @@ impl GeyserPluginKafka {
             self.runtime.clone(),
             config.clone(),
             slot_status_rx,
+            ctx_stats.clone(),
             should_stop.clone(),
         )));
 
@@ -141,6 +159,7 @@ impl GeyserPluginKafka {
             self.runtime.clone(),
             config.clone(),
             transaction_rx,
+            ctx_stats.clone(),
             should_stop.clone(),
         )));
 
@@ -148,9 +167,11 @@ impl GeyserPluginKafka {
             self.runtime.clone(),
             config,
             block_metadata_rx,
+            ctx_stats,
             should_stop,
         )));
 
+        self.prometheus_jhandle = prometheus_jhandle;
         self.update_account_jhandle = update_account_jhandle;
         self.update_slot_status_jhandle = update_slot_status_jhandle;
         self.notify_transaction_jhandle = notify_transaction_jhandle;

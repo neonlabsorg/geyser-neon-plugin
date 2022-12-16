@@ -39,6 +39,8 @@ An example configuration file looks like the following:
     "batch_num_messages": "10000",
     "linger_ms": "20",
     "acks": "-1",
+    "statistics_interval_ms" : "0",
+    "prometheus_port": "9090",
     "message_timeout_ms": "100000",
     "kafka_log_level": "Info",
     "global_log_level": "Info"
