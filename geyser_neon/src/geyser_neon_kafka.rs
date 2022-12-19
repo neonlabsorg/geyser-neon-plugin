@@ -279,11 +279,13 @@ impl GeyserPlugin for GeyserPluginKafka {
     ) -> Result<()> {
         let account: KafkaReplicaAccountInfoVersions = account.into();
         let account_tx = self.account_tx.clone();
+        let retrieved_time = Utc::now().naive_utc();
 
         let update_account = UpdateAccount {
             account,
             slot,
             is_startup,
+            retrieved_time,
         };
 
         match account_tx
@@ -337,10 +339,12 @@ impl GeyserPlugin for GeyserPluginKafka {
     ) -> Result<()> {
         let transaction_info: KafkaReplicaTransactionInfoVersions = transaction_info.into();
         let transaction_tx = self.transaction_tx.clone();
+        let retrieved_time = Utc::now().naive_utc();
 
         let notify_transaction = NotifyTransaction {
             transaction_info,
             slot,
+            retrieved_time,
         };
 
         match transaction_tx
@@ -357,8 +361,12 @@ impl GeyserPlugin for GeyserPluginKafka {
     fn notify_block_metadata(&mut self, block_info: ReplicaBlockInfoVersions) -> Result<()> {
         let block_info: KafkaReplicaBlockInfoVersions = block_info.into();
         let block_metadata_tx = self.block_metadata_tx.clone();
+        let retrieved_time = Utc::now().naive_utc();
 
-        let notify_block = NotifyBlockMetaData { block_info };
+        let notify_block = NotifyBlockMetaData {
+            block_info,
+            retrieved_time,
+        };
 
         match block_metadata_tx
             .expect("Channel was not created!")
