@@ -422,6 +422,7 @@ pub struct UpdateAccount {
     pub account: KafkaReplicaAccountInfoVersions,
     pub slot: u64,
     pub is_startup: bool,
+    pub retrieved_time: NaiveDateTime,
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -472,10 +473,12 @@ pub struct NotifyTransaction {
     #[serde(flatten)]
     pub transaction_info: KafkaReplicaTransactionInfoVersions,
     pub slot: u64,
+    pub retrieved_time: NaiveDateTime,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct NotifyBlockMetaData {
     #[serde(flatten)]
     pub block_info: KafkaReplicaBlockInfoVersions,
+    pub retrieved_time: NaiveDateTime,
 }
