@@ -134,10 +134,11 @@ impl GeyserPluginKafka {
             .parse()
             .unwrap_or_else(|e| panic!("Wrong prometheus port number, error: {e}"));
 
-        let prometheus_jhandle = Some(
-            self.runtime
-                .spawn(start_prometheus(ctx_stats.stats.clone(), prometheus_port)),
-        );
+        let prometheus_jhandle = Some(self.runtime.spawn(start_prometheus(
+            ctx_stats.stats.clone(),
+            config.clone(),
+            prometheus_port,
+        )));
 
         let update_account_jhandle = Some(self.runtime.spawn(update_account_loop(
             self.runtime.clone(),
