@@ -16,7 +16,7 @@ use tokio::signal::unix::{signal, SignalKind};
 use crate::kafka_producer_stats::Stats;
 
 pub async fn start_prometheus(stats: Arc<Stats>, port: u16) {
-    let mut registry = <Registry>::with_prefix("Geyser neon stats");
+    let mut registry = <Registry>::default();
 
     registry.register(
         "kafka_update_account",
